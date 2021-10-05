@@ -1,17 +1,29 @@
 import search_world
-
 import numpy as np
+
+
+class GridActionSpace(search_world.Space):
+    """A grid world action space with 4 movements
+    """
+    def __init__(self, seed=None):
+        self._action_space = [[0, 1], [1, 0], [0, -1], [-1, 0], [0, 0]]
+        super().__init__(len(self._action_space), np.ndarray, seed)
+
+    def sample(self):
+        return np.random.choice(self._action_space) 
+    
+    def contains(self, a):
+        return list(filter(lambda action: np.all(action, a)), self._action_space)
+
 
 class Hallway(search_world.Env):
     def __init__(self) -> None:
         """Constructor for hallway class. 
         """        
         super().__init__()
-        # TODO: Add argument for maximum number of time steps
-        # TODO: Grid world action space. Up, left, right, down
-        self._action_space = [[0, 1], [1, 0], [0, -1], [-1, 0], [0, 0]] 
-        # TODO: Grid world observation space. All possible configurations of walls below, above
-        # self._observation_space = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1], [1, 1, 0, 0], [1, 0, 0, 1], ]
+        self.action_space = GridActionSpace()
+        # TODO: Grid world observation space. All possible configurations of walls below, above, right, and left, as well as color of the current node (to make informative nodes possible)
+        self._maze = None
 
     def _observation(self) -> object:
         """Generates observation based on current location of agent. The observation is a binary vector of length 4 corresponding adjacent nodes have a wall, 0 otherwise. 
@@ -40,6 +52,7 @@ class Hallway(search_world.Env):
 
         done = False
         reward = 0
+
         if np.all(self._agent_position == self._target_position):
             done = True
             reward = 10
@@ -54,13 +67,28 @@ class Hallway(search_world.Env):
         Args:
             action (object): action performed by agent.
         """
-        # TODO: Check if action in action space
-        new_agent_position = self._agent_position + action
-        if self._maze[new_agent_position[0], new_agent_position[1]] == 1:
-            new_agent_position = self._agent_position
-        self._agent_position = new_agent_position
 
+        if action not in self.action_space:
+            return ValueError("Agent action not in Maze environment action space")
+        new_agent_position = self._agent_position + action
+        
+        # only update position if tentative new position is a valid one 
+        if self._is_valid(new_agent_position):
+            self._agent_position = new_agent_position
+
+    def _is_valid(self, position):
+        """Returns true if given position is valid for agent occupancy
+
+        Args:
+            position (object): coordinates of object whose position is being checked
+        """
+        return self._maze[position[0]] != 1
+    
     def reset(self):
+        """Generates new maze, target position, and agent position
+        Returns:
+            observation (object): observation corresponding to initial state
+        """
         # TODO: Move all of this into a maze-generating function
         self._length = np.random.randint(low=3, high=12)
         leaf_nodes = np.arange(1, self._length, 2)

@@ -1,5 +1,7 @@
 from search_world.core import (
-    Env
+    Env,
+    Wrapper,
+    Space
 )
 
-__all__  = ["Env"]
+__all__  = ["Env", "Wrapper", "Space"]
