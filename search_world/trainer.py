@@ -6,22 +6,26 @@ $ python3 tensorboard --log_dir=logs/$run_number/tensorboard
 """
 
 import time
+import logging
 
 class Trainer(object):
-    def __init__(self, model, env, num_steps):
+    def __init__(self, model, env, num_training_steps):
         self._model = model
         self._env = env
-        self._num_steps = num_steps
+        self._num_training_steps = num_training_steps
 
     def train_step():
         pass
 
     def __call__(self, log_dir):
         obs = self._env.reset()
-        for step in range(self._num_steps):
+        for step in range(self._num_training_steps):
+            logging.info('Step: {} of {}'.format(
+                step, self._num_training_steps))
             action = self._env.action_space.sample() # TODO: Implement action space property for env
 
-            obs, reward, done, info = self.env.step(action)
+            obs, reward, done, info = self._env.step(action)
+            logging.info('action={}, obs={}, reward={}, done={}, info={}'.format(action, obs, reward, done, info))
 
             self._env.render() # TODO: Implement render step for environment
 

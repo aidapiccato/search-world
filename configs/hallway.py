@@ -3,13 +3,17 @@
 """
 
 from search_world.trainer import Trainer
-
+from search_world.envs.maze import Hallway
 def model_config():
     config = {}
     return config
 
-def task_config():
-    config = {}
+def env_config():
+    config = {
+        'constructor': Hallway,
+
+
+    }
     return config
 
 def get_config():
@@ -18,8 +22,8 @@ def get_config():
         'constructor': Trainer,
         'kwargs': {
             'model': model_config(),
-            'task': task_config(),
-            'log_dir': 'logs'
+            'env': env_config(),
+            'num_training_steps': 100, 
         }    
     }
     return config

@@ -10,10 +10,11 @@ class GridActionSpace(search_world.Space):
         super().__init__(len(self._action_space), np.ndarray, seed)
 
     def sample(self):
-        return np.random.choice(self._action_space) 
+        return self._action_space[np.random.choice(len(self._action_space))]
     
     def contains(self, a):
-        return list(filter(lambda action: np.all(action, a)), self._action_space)
+        a = np.asarray(a)
+        return (-1 <= a).all() and (a <= 1).all()
 
 
 class Hallway(search_world.Env):
@@ -82,8 +83,14 @@ class Hallway(search_world.Env):
         Args:
             position (object): coordinates of object whose position is being checked
         """
-        return self._maze[position[0]] != 1
+        if (0 <= position).all() and (position < self._maze.shape).all():
+            return self._maze[position[0], position[1]] != 1
+        return False
     
+    def render(self, mode="human"):
+        # TODO: Implement render methods
+        pass
+
     def reset(self):
         """Generates new maze, target position, and agent position
         Returns:

@@ -32,6 +32,8 @@ class Space(object):
         """
         raise NotImplementedError
 
+    def __contains__(self, x):
+        return self.contains(x)
 
 
 

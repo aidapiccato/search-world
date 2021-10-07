@@ -29,7 +29,7 @@ from python_utils.configs import override_config
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string('config',
-                    'configs.lif_rnn',
+                    'configs.hallway',
                     'Module name of task config to use.')
 flags.DEFINE_string(
     'config_overrides', '',
