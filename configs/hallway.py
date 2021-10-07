@@ -23,7 +23,8 @@ def get_config():
         'kwargs': {
             'model': model_config(),
             'env': env_config(),
-            'num_training_steps': 100, 
+            'num_training_steps': 1000, 
+            'render': True
         }    
     }
     return config

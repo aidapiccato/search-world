@@ -1,5 +1,6 @@
 import search_world
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 class GridActionSpace(search_world.Space):
@@ -88,8 +89,12 @@ class Hallway(search_world.Env):
         return False
     
     def render(self, mode="human"):
-        # TODO: Implement render methods
-        pass
+        ax = plt.gca()
+        ax.imshow(self._maze, cmap='gray')
+        target = plt.Circle((self._target_position[1], self._target_position[0]), radius=0.5, color='yellow')
+        ax.add_artist(target)
+        agent = plt.Circle((self._agent_position[1], self._agent_position[0]), radius=0.5)        
+        ax.add_artist(agent)
 
     def reset(self):
         """Generates new maze, target position, and agent position
