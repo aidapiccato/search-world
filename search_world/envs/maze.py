@@ -14,8 +14,16 @@ class GridActionSpace(search_world.Space):
         return self._action_space[np.random.choice(len(self._action_space))]
     
     def contains(self, a):
+        """Returns true if action performed by agent is contained in grid space.
+
+        Args:
+            a (object): Action performed by agent
+
+        Returns:
+            bool: True if agent action is valid, false otherwise
+        """
         a = np.asarray(a)
-        return (-1 <= a).all() and (a <= 1).all()
+        return (-1 <= a).all() and (a <= 1).all() and len(np.flatnonzero(np.abs(a) > 0)) == 1
 
 
 class Hallway(search_world.Env):

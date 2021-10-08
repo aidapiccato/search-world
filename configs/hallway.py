@@ -4,15 +4,17 @@
 
 from search_world.trainer import Trainer
 from search_world.envs.maze import Hallway
+
 def model_config():
-    config = {}
+    config = {
+        'module': 'search_world.models.random',
+        'method': 'RandomAgent'
+    }
     return config
 
 def env_config():
     config = {
         'constructor': Hallway,
-
-
     }
     return config
 

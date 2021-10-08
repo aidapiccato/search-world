@@ -5,7 +5,6 @@ tensorboard by running the following command:
 $ python3 tensorboard --log_dir=logs/$run_number/tensorboard
 """
 
-import time
 import logging
 import matplotlib.pyplot as plt
 
@@ -21,13 +20,19 @@ class Trainer(object):
 
     def __call__(self, log_dir):
         obs = self._env.reset()
+        
+        model = self._model(self._env)
+
         plot_every = 1
         plt.ion()
         fig, ax = plt.subplots()
+
         for step in range(self._num_training_steps):
+
             logging.info('Step: {} of {}'.format(
                 step, self._num_training_steps))
-            action = self._env.action_space.sample() # TODO: Implement action space property for env
+
+            action = model(obs)
 
             obs, reward, done, info = self._env.step(action)
             logging.info('action={}, obs={}, reward={}, done={}, info={}'.format(action, obs, reward, done, info))
