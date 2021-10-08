@@ -1,13 +1,23 @@
 import search_world
+import itertools
 import numpy as np
 import matplotlib.pyplot as plt
 
+class GridObservationSpace(search_world.Space):
+    """Grid world observation space. Assuming only 4 adjacent blocks are visible. 
+    """
+    def __init__(self, seed=None):
+        self._observation_space = [list(i) for i in itertools.product([0, 1], repeat=4)]
+        super().__init__(len(self._observation_space), np.ndarray, seed)
 
+    def sample(self):
+        return self._observation_space[np.random.choice(len(self._observation_space))]
+        
 class GridActionSpace(search_world.Space):
     """A grid world action space with 4 movements
     """
     def __init__(self, seed=None):
-        self._action_space = [[0, 1], [1, 0], [0, -1], [-1, 0], [0, 0]]
+        self._action_space = [[0, 1], [1, 0], [0, -1], [-1, 0], [0, 0]]        
         super().__init__(len(self._action_space), np.ndarray, seed)
 
     def sample(self):
@@ -32,7 +42,7 @@ class Hallway(search_world.Env):
         """        
         super().__init__()
         self.action_space = GridActionSpace()
-        # TODO: Grid world observation space. All possible configurations of walls below, above, right, and left, as well as color of the current node (to make informative nodes possible)
+        self.observation_space = GridObservationSpace()
         self._maze = None
 
     def _observation(self) -> object:

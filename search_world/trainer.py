@@ -20,7 +20,7 @@ class Trainer(object):
 
     def __call__(self, log_dir):
         obs = self._env.reset()
-        
+
         model = self._model(self._env)
 
         plot_every = 1
@@ -46,5 +46,4 @@ class Trainer(object):
             if done: 
                 self._env.reset()
 
-        self._env.close() # TODO: Implement close method for env
-
+        self._env.close()
