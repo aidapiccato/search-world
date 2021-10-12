@@ -1,16 +1,7 @@
-from os import readv
 import search_world
 import itertools
 import numpy as np
 import matplotlib.pyplot as plt
-
-# class MazeStateSpace(search_world.Space):
-#     def __init__(self, shape=None, dtype=None, seed=None) -> None:
-#         super().__init__(shape=shape, dtype=dtype, seed=seed)
-        
-#     def contains(self, state):
-        
-    
 
 class MazeObservationSpace(search_world.Space):
     """Grid world observation space. Assuming only 4 adjacent blocks are visible. 
