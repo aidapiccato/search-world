@@ -95,7 +95,6 @@ class Maze(search_world.Env):
         if np.all(self._agent_position == self._target_position):
             done = True
 
-
         obs = self._agent_observation()
 
         return obs, reward, done, {}
@@ -142,14 +141,14 @@ class Maze(search_world.Env):
         Returns:
             observation (object): observation corresponding to initial state
         """
+        # creating maze and setting initial conditions
         maze = self._maze_gen_func()
         self._maze = maze['maze']
         self._target_position = maze['target_position']
         self._inf_positions = maze['inf_positions']
         self._agent_position = maze['agent_position']
 
-
-        # creating state and observation space
+        # creating state and observation spaces
         self._state_space = np.vstack(np.where(self._maze == 0)).T
         self._observation_space = [self._observation(state) for state in self._state_space]
         return self._agent_observation()

@@ -1,10 +1,42 @@
         
 import numpy as np
+from numpy.lib.function_base import kaiser
 
 def symmetric_corridors():
-    pass
+    """Generates maze of symmetric corridor type, with no informative nodes
+
+    Returns:
+        dict: dictionary containing maze and initial conditions
+    """
+    length = np.random.choice(np.arange(3, 11, 2)) 
+    n_corridors = np.random.choice(np.arange(2, 5))
+    corridors_x = np.arange(1, 2 * n_corridors, 2)  
+    corridors_y = np.arange(1, length+1)
+    target_corridor = np.random.choice(corridors_x)
+    target_height = np.random.choice(corridors_y)
+    agent_corridor = np.random.choice(corridors_x)
+    agent_height = np.random.choice(corridors_y)
+    while not np.all([agent_corridor, agent_height] 
+        == [target_corridor, target_height]):
+            agent_corridor = np.random.choice(corridors_x)
+            agent_height = np.random.choice(corridors_y)
+    maze = np.ones((length + 2, 2 * n_corridors + 1))    
+    for x in corridors_x:
+        maze[corridors_y, x] = np.zeros(length)
+    maze[int(np.ceil(length/2)), 1:2 * n_corridors] = 0
+    inf_positions = np.empty((0, 2))
+    target_position = np.asarray([target_height, target_corridor])
+    agent_position = np.asarray([agent_height, agent_corridor]) 
+    return dict(inf_positions=inf_positions, maze=maze,     target_position=target_position, agent_position=agent_position)
+
+
 
 def hallway():
+    """Generates maze of hallway type, consisting of long corridor with offshoot leaves. Some leaves contain informative nodes    
+
+    Returns:
+        dict: dictionary containing maze and initial condition
+    """
     length = np.random.randint(low=3, high=12)
     leaf_nodes = np.arange(1, length, 2)
     # creating main empty corridor and leaves 
