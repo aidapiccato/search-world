@@ -14,7 +14,7 @@ def symmetric_corridors():
     target_height = np.random.choice(corridors_y)
     agent_corridor = np.random.choice(corridors_x)
     agent_height = np.random.choice(corridors_y)
-    while not np.all([agent_corridor, agent_height] 
+    while np.all([agent_corridor, agent_height] 
         == [target_corridor, target_height]):
             agent_corridor = np.random.choice(corridors_x)
             agent_height = np.random.choice(corridors_y)

@@ -1,22 +1,33 @@
 import search_world
-import itertools
+import hashlib
 import numpy as np
 import matplotlib.pyplot as plt
 
-class MazeObservationSpace(search_world.Space):
-    """Grid world observation space. Assuming only 4 adjacent blocks are visible. 
+class MazeObservationModel(object):
+    """Grid world observation model. 
     """
-    def __init__(self, seed=None): 
-        self._observation_space = [list(i) for i in itertools.product([0, 1], repeat=4)]
-        super().__init__(len(self._observation_space), np.ndarray, seed)
+    def __init__(self, observation_space, state_space): 
+        self._observation_space = observation_space
+        self._state_space = state_space
+        self._histogram = {str(state): {str(observation): self._observation_space[state_idx] ==         observation for observation in self._observation_space}
+        for (state_idx, state) in enumerate(self._state_space)}
+
+    def probability(self, observation, state):
+        return self._histogram[str(state)][str(observation)]
+
+class MazeTransitionModel(object):
+    """Grid world transition model
+    """
+    def __init__(self, state_space, action_space, transition_func) -> None:
+        self._state_space = state_space
+        self._action_space = action_space
+        self._transition_func = transition_func
+        self._histogram = {str(state): {str(action): {str(next_state): self._transition_func(state, action) == state for next_state in self._state_space} for action in action_space} for state in self._state_space}
+         
+
+    def probability(self, next_state, state, action):
+        return self._histogram[str(state)][str(action)][str(next_state)]
     
-    def contains(self, obs):
-        obs = np.asarray(obs)
-        return len(list(filter(lambda o: (o == obs).all(), self._observation_space))) > 0
-    
-    def sample(self):
-        return self._observation_space[np.random.choice(len(self._observation_space))]
-        
 class MazeActionSpace(search_world.Space):
     """A grid world action space with 4 movements
     """
@@ -27,6 +38,9 @@ class MazeActionSpace(search_world.Space):
     def sample(self):
         return self._action_space[np.random.choice(len(self._action_space))]
     
+    def __iter__(self):
+        return iter(self._action_space)
+
     def contains(self, a):
         """Returns true if action performed by agent is contained in grid space.
 
@@ -49,7 +63,6 @@ class Maze(search_world.Env):
         super().__init__()
 
         self.action_space = MazeActionSpace()
-        self.observation_space = MazeObservationSpace()
         self._maze_gen_func = maze_gen_func
         self._maze = None
 
@@ -99,20 +112,22 @@ class Maze(search_world.Env):
 
         return obs, reward, done, {}
 
+    def _transition_func(self, state, action):
+        new_state = state + action
+        if self._is_valid(new_state):
+            return new_state
+        return state
+
     def _take_action(self, action):
         """Updates agent position. 
 
         Args:
             action (object): action performed by agent.
         """
-
         if action not in self.action_space:
             return ValueError("Agent action not in Maze environment action space")
-        new_agent_position = self._agent_position + action
-        
-        # only update position if tentative new position is a valid one 
-        if self._is_valid(new_agent_position):
-            self._agent_position = new_agent_position
+        self._agent_position = self._transition_func(self._agent_position, action)
+
 
     def _is_valid(self, position):
         """Returns true if given position is valid for agent occupancy
@@ -150,12 +165,7 @@ class Maze(search_world.Env):
 
         # creating state and observation spaces
         self._state_space = np.vstack(np.where(self._maze == 0)).T
-        self._observation_space = [self._observation(state) for state in self._state_space]
+        self._observation_space = [self._observation(state) for state in self._state_space]        
+        self._observation_model = MazeObservationModel(self._observation_space, self._state_space)
+        self._transition_model = MazeTransitionModel(self._state_space, self.action_space, self.       _transition_func)
         return self._agent_observation()
-        
-
-
-
-
-
-
