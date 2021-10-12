@@ -57,7 +57,8 @@ class Hallway(search_world.Env):
         """
         adjacent_nodes = np.asarray([[0, 1], [1, 0], [0, -1], [-1, 0]]) + state
         adjacent_nodes = [self._maze[node_x, node_y] for (node_x, node_y) in adjacent_nodes]
-        return adjacent_nodes
+        is_inf = np.any(np.all(np.isin(self._inf_positions, state, True), axis=1))
+        return (adjacent_nodes, is_inf)
 
     def _agent_observation(self) -> object:
         """Generates observation based on current location of agent. The observation is a binary vector of length 4 corresponding adjacent nodes have a wall, 0 otherwise. 
@@ -124,6 +125,9 @@ class Hallway(search_world.Env):
         target = plt.Circle((self._target_position[1], self._target_position[0]), radius=0.5, color='yellow')
         ax.add_artist(target)
         agent = plt.Circle((self._agent_position[1], self._agent_position[0]), radius=0.5)        
+        for inf_pos in self._inf_positions:
+            inf = plt.Circle((inf_pos[1], inf_pos[0]), radius=0.5, color='red')
+            ax.add_artist(inf)
         ax.add_artist(agent)
 
     def reset(self):
@@ -138,14 +142,24 @@ class Hallway(search_world.Env):
         self._maze = np.ones((2, self._length))
         self._maze[0] = np.zeros((1, self._length))
         self._maze[1, leaf_nodes] = 0
-        # randomly selecting leaf node to be target node
-        self._target_position = np.asarray([1, np.random.choice(leaf_nodes)])
+        # randomly selecting leaf node to be target node        
+        self._target_position = np.random.choice(leaf_nodes)
+        # randomly selecting leaf nodes to be informative nodes
+        num_inf_positions = np.random.randint(low=0, high=len(leaf_nodes))
+        self._inf_positions = leaf_nodes[leaf_nodes != self._target_position]
+        self._inf_positions = np.random.choice(self._inf_positions, size=num_inf_positions, replace=False)
+        if num_inf_positions == 0:
+            self._inf_positions = [[]]
+
+
         # adding horizontal and vertical padding
         self._maze = np.vstack([np.ones((1, self._length)), self._maze, np.ones((1, self._length))])
         self._maze = np.hstack([np.ones((4, 1)), self._maze, np.ones((4, 1))])
+        self._target_position = np.asarray([1, self._target_position])
         self._target_position += [1, 1]  
+        self._inf_positions = [np.asarray([1, inf_pos]) + [1, 1] for inf_pos in self._inf_positions]
         # start agent somewhere along main corridor
-        self._agent_position = np.asarray([1, np.random.choice(self._length) + 1])
+        self._agent_position = np.asarray([1, np.random.choice(self._length) + 1])        
         # creating state and observation space
         self._state_space = np.vstack(np.where(self._maze == 0)).T
         self._observation_space = [self._observation(state) for state in self._state_space]
