@@ -36,12 +36,13 @@ class Space(object):
         return self.contains(x)
 
 
-
 class Env(object):
     """Abstract class for implementing an arbitrary environment dynamics. Can be partially or fully observed. Adapted from OpenAI Gym's abstract Env class. (https://github.com/openai/gym/blob/master/gym/core.py) """
 
     action_space = None
     observation_space = None
+    state_space = None
+
     @abstractmethod
     def step(self, action):
         """Run one timestep of the environment's dynamics. When end of the episode is reached, you are responsible for calling reset() to reset environment's state
@@ -98,10 +99,21 @@ class Wrapper(Env):
     def __init__(self, env):
         self.env = env
         self._action_space = None
+        self._state_space = None
         self._observation_space = None
         self._reward_range = None
         self._metadata = None
 
+    @property 
+    def state_space(self):
+        if self._state_space is None:
+            return self.env.state_space
+        return self._state_space
+    
+    @state_space.setter
+    def state_space(self, space):
+        self._state_space = space
+        
     @property
     def action_space(self):
         if self._action_space is None:

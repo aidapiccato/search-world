@@ -1,19 +1,32 @@
+from os import readv
 import search_world
 import itertools
 import numpy as np
 import matplotlib.pyplot as plt
 
-class GridObservationSpace(search_world.Space):
+# class MazeStateSpace(search_world.Space):
+#     def __init__(self, shape=None, dtype=None, seed=None) -> None:
+#         super().__init__(shape=shape, dtype=dtype, seed=seed)
+        
+#     def contains(self, state):
+        
+    
+
+class MazeObservationSpace(search_world.Space):
     """Grid world observation space. Assuming only 4 adjacent blocks are visible. 
     """
-    def __init__(self, seed=None):
+    def __init__(self, seed=None): 
         self._observation_space = [list(i) for i in itertools.product([0, 1], repeat=4)]
         super().__init__(len(self._observation_space), np.ndarray, seed)
-
+    
+    def contains(self, obs):
+        obs = np.asarray(obs)
+        return len(list(filter(lambda o: (o == obs).all(), self._observation_space))) > 0
+    
     def sample(self):
         return self._observation_space[np.random.choice(len(self._observation_space))]
         
-class GridActionSpace(search_world.Space):
+class MazeActionSpace(search_world.Space):
     """A grid world action space with 4 movements
     """
     def __init__(self, seed=None):
@@ -41,19 +54,27 @@ class Hallway(search_world.Env):
         """Constructor for hallway class. 
         """        
         super().__init__()
-        self.action_space = GridActionSpace()
-        self.observation_space = GridObservationSpace()
+        self.action_space = MazeActionSpace()
+        self.observation_space = MazeObservationSpace()
         self._maze = None
 
-    def _observation(self) -> object:
+    def _observation(self, state) -> object:
+        """Generates observation for given coordinate position. Useful for constructing entire observation space
+
+        Args:
+            state (tuple of ints): coordinates from which to generate observation. 
+        """
+        adjacent_nodes = np.asarray([[0, 1], [1, 0], [0, -1], [-1, 0]]) + state
+        adjacent_nodes = [self._maze[node_x, node_y] for (node_x, node_y) in adjacent_nodes]
+        return adjacent_nodes
+
+    def _agent_observation(self) -> object:
         """Generates observation based on current location of agent. The observation is a binary vector of length 4 corresponding adjacent nodes have a wall, 0 otherwise. 
 
         Returns:
             object: Observation corresponding to current position of agent.
         """ 
-        adjacent_nodes = np.asarray([[0, 1], [1, 0], [0, -1], [-1, 0]]) + self._agent_position
-        adjacent_nodes = [self._maze[node_x, node_y] for (node_x, node_y) in adjacent_nodes]
-        return adjacent_nodes
+        return self._observation(self._agent_position)
 
 
     def step(self, action):
@@ -77,7 +98,7 @@ class Hallway(search_world.Env):
             done = True
             reward = 10
 
-        obs = self._observation()
+        obs = self._agent_observation()
 
         return obs, reward, done, {}
 
@@ -134,7 +155,10 @@ class Hallway(search_world.Env):
         self._target_position += [1, 1]  
         # start agent somewhere along main corridor
         self._agent_position = np.asarray([1, np.random.choice(self._length) + 1])
-        return self._observation()
+        # creating state and observation space
+        self._state_space = np.vstack(np.where(self._maze == 0)).T
+        self._observation_space = [self._observation(state) for state in self._state_space]
+        return self._agent_observation()
         
 
 
