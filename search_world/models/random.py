@@ -1,17 +1,23 @@
+import numpy as np
+import matplotlib.pyplot as plt
 
-class DiscreteBeliefState(object):
+class BeliefState(object):
     def __init__(self, env):
-        self._state_space = env.state_space
-        self._observation_space = env.observation_space
-        self._action_space = env.action_space
-        self._b = None
+        self._env = env
+
 
     def reset(self):
         """Reset belief state to uniform distribution over state space or given initial distribution
         """
+        self._observation_model = self._env._observation_model
+        self._state_space = self._env._state_space
+        self._action_space = self._env.action_space
+        self._transition_model = self._env._transition_model
+        self._b = {str(state): 1/len(self._state_space) for state in self._state_space}
 
-        self._b = {state: 1/self._state_space.shape() for state in self._state_space}
-
+    def render(self, ax):
+        ax.bar(np.arange(len(self._state_space)), self._b.values())
+    
     def update(self, obs, action):
         """Bayesian update of belief state given current observation
 
@@ -22,13 +28,16 @@ class DiscreteBeliefState(object):
         b_prime = {}
 
         total_prob = 0
-        for state_prime in self._state_space:
-            p_obs = self._observation_space.probability(obs, state_prime, action)
-            p_next_state = self._b[state_prime]
-            b_prime.update({state_prime: p_obs * p_next_state})
-            total_prob += p_obs * p_next_state
 
-        for s, p in b_prime.iteritems():
+        for next_state in self._state_space:
+            p_obs = self._observation_model(observation=obs, state=next_state)
+            p_next_state = 0
+            for state in self._state_space:
+                p_next_state += self._b[str(state)] * self._transition_model(next_state=next_state, state=state, action=action)            
+            b_prime.update({str(next_state): p_obs * p_next_state})
+            total_prob += b_prime[str(next_state)]
+
+        for s, p in b_prime.items():
             b_prime[s] = p/total_prob
 
         self._b = b_prime
@@ -36,12 +45,22 @@ class DiscreteBeliefState(object):
 class BeliefUpdatingRandomAgent(object):
     def __init__(self, env):
         self._env = env
-        self._belief_state = DiscreteBeliefState(self._env)
-        self._action_space = env._action_space
+        self._action_space = env.action_space
+        self._belief_state = BeliefState(self._env)
     
     def reset(self):
-        self._belief_state.reset()
-        self._action = None
+        if self._belief_state is not None:
+            self._belief_state.reset()
+        else:
+            self._belief_state = BeliefState(self._env)
+
+        self._action = [0, 0]
+
+    def render(self, ax=None):
+        if ax is None:
+            ax = plt.gca()
+        self._belief_state.render(ax)
+
 
     def __call__(self, obs):
         """Updates belief over possible current states given current observation and previous action

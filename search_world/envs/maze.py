@@ -12,7 +12,7 @@ class MazeObservationModel(object):
         self._histogram = {str(state): {str(observation): np.all(self._observation_space[state_idx] == observation) for observation in self._observation_space}
         for (state_idx, state) in enumerate(self._state_space)}
 
-    def probability(self, observation, state):
+    def __call__(self, observation, state):
         return self._histogram[str(state)][str(observation)]
 
 class MazeTransitionModel(object):
@@ -25,7 +25,7 @@ class MazeTransitionModel(object):
         self._histogram = {str(state): {str(action): {str(next_state): np.all(self._transition_func(state, action) == next_state) for next_state in self._state_space} for action in action_space} for state in self._state_space}
          
 
-    def probability(self, next_state, state, action):
+    def __call__(self, next_state, state, action):
         return self._histogram[str(state)][str(action)][str(next_state)]
     
 class MazeActionSpace(search_world.Space):
@@ -100,7 +100,7 @@ class Maze(search_world.Env):
             done (bool): True if agent has found target or environment times out, False otherwise.
             info (dict): auxiliary information
         """ 
-        import pdb; pdb.set_trace()
+
         self._take_action(action)
 
         done = False
@@ -141,8 +141,9 @@ class Maze(search_world.Env):
             return self._maze[position[0], position[1]] != 1
         return False
     
-    def render(self, mode="human"):
-        ax = plt.gca()
+    def render(self, ax=None, mode="human"):
+        if ax is None:
+            ax = plt.gca()
         ax.imshow(self._maze, cmap='gray')
         target = plt.Circle((self._target_position[1], self._target_position[0]), radius=0.5, color='yellow')
         ax.add_artist(target)

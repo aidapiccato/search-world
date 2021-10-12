@@ -22,10 +22,10 @@ class Trainer(object):
         obs = self._env.reset()
 
         model = self._model(self._env)
-
+        model.reset()
         plot_every = 1
         plt.ion()
-        fig, ax = plt.subplots()
+        fig, axs = plt.subplots(nrows=2, ncols=1)
 
         for step in range(self._num_training_steps):
 
@@ -38,12 +38,15 @@ class Trainer(object):
             logging.info('action={}, obs={}, reward={}, done={}, info={}'.format(action, obs, reward, done, info))
 
             if self._render and step % plot_every == 0:
-                ax.clear()
-                self._env.render() 
+                for ax in axs:
+                    ax.clear()
+                self._env.render(ax=axs[0]) 
+                model.render(ax=axs[1])
                 plt.show(block=False)
                 plt.pause(0.1)
 
             if done: 
                 self._env.reset()
+                model.reset()
 
         self._env.close()
