@@ -3,8 +3,8 @@
 """
 
 from search_world.trainer import Trainer
-from search_world.envs.maze import Hallway
-
+from search_world.envs.maze import Maze
+from search_world.utils.maze_utils import hallway
 def model_config():
     config = {
         'module': 'search_world.models.random',
@@ -14,7 +14,10 @@ def model_config():
 
 def env_config():
     config = {
-        'constructor': Hallway,
+        'constructor': Maze,
+        'kwargs':{
+            'maze_gen_func': hallway
+        }
     }
     return config
 
