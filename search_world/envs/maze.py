@@ -9,7 +9,7 @@ class MazeObservationModel(object):
     def __init__(self, observation_space, state_space): 
         self._observation_space = observation_space
         self._state_space = state_space
-        self._histogram = {str(state): {str(observation): self._observation_space[state_idx] ==         observation for observation in self._observation_space}
+        self._histogram = {str(state): {str(observation): np.all(self._observation_space[state_idx] == observation) for observation in self._observation_space}
         for (state_idx, state) in enumerate(self._state_space)}
 
     def probability(self, observation, state):
@@ -22,7 +22,7 @@ class MazeTransitionModel(object):
         self._state_space = state_space
         self._action_space = action_space
         self._transition_func = transition_func
-        self._histogram = {str(state): {str(action): {str(next_state): self._transition_func(state, action) == state for next_state in self._state_space} for action in action_space} for state in self._state_space}
+        self._histogram = {str(state): {str(action): {str(next_state): np.all(self._transition_func(state, action) == next_state) for next_state in self._state_space} for action in action_space} for state in self._state_space}
          
 
     def probability(self, next_state, state, action):
@@ -100,10 +100,12 @@ class Maze(search_world.Env):
             done (bool): True if agent has found target or environment times out, False otherwise.
             info (dict): auxiliary information
         """ 
+        import pdb; pdb.set_trace()
         self._take_action(action)
 
         done = False
         reward = self.agent_reward()
+
 
         if np.all(self._agent_position == self._target_position):
             done = True
@@ -167,5 +169,5 @@ class Maze(search_world.Env):
         self._state_space = np.vstack(np.where(self._maze == 0)).T
         self._observation_space = [self._observation(state) for state in self._state_space]        
         self._observation_model = MazeObservationModel(self._observation_space, self._state_space)
-        self._transition_model = MazeTransitionModel(self._state_space, self.action_space, self.       _transition_func)
+        self._transition_model = MazeTransitionModel(self._state_space, self.action_space, self._transition_func)
         return self._agent_observation()
