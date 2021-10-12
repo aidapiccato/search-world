@@ -1,6 +1,4 @@
-        
 import numpy as np
-from numpy.lib.function_base import kaiser
 
 def symmetric_corridors():
     """Generates maze of symmetric corridor type, with no informative nodes
