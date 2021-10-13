@@ -100,7 +100,6 @@ class Maze(search_world.Env):
             done (bool): True if agent has found target or environment times out, False otherwise.
             info (dict): auxiliary information
         """ 
-
         self._take_action(action)
 
         done = False
@@ -165,7 +164,6 @@ class Maze(search_world.Env):
         self._target_position = maze['target_position']
         self._inf_positions = maze['inf_positions']
         self._agent_position = maze['agent_position']
-
         # creating state and observation spaces
         self._state_space = np.vstack(np.where(self._maze == 0)).T
         self._observation_space = [self._observation(state) for state in self._state_space]        

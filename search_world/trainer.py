@@ -46,7 +46,7 @@ class Trainer(object):
                 plt.pause(0.1)
 
             if done: 
-                self._env.reset()
+                obs = self._env.reset()
                 model.reset()
 
         self._env.close()

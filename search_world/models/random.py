@@ -1,3 +1,4 @@
+from os import stat_result
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -5,18 +6,25 @@ class BeliefState(object):
     def __init__(self, env):
         self._env = env
 
-
     def reset(self):
         """Reset belief state to uniform distribution over state space or given initial distribution
         """
         self._observation_model = self._env._observation_model
         self._state_space = self._env._state_space
+        self._state_mapping = {str(state): state for state in self._state_space}
         self._action_space = self._env.action_space
         self._transition_model = self._env._transition_model
         self._b = {str(state): 1/len(self._state_space) for state in self._state_space}
 
     def render(self, ax):
-        ax.bar(np.arange(len(self._state_space)), self._b.values())
+        state_x = [state[0] for state in self._state_space]
+        state_y = [state[1] for state in self._state_space]
+
+        maze = np.zeros((np.amax(state_x) + 2, np.amax(state_y)+2))
+        for state in self._state_space:
+            maze[state[0],state[1]] = self._b[str(state)]
+
+        ax.imshow(maze, vmin=0, vmax=1)
     
     def update(self, obs, action):
         """Bayesian update of belief state given current observation
@@ -27,16 +35,14 @@ class BeliefState(object):
         """
         b_prime = {}
 
-        total_prob = 0
-
+        total_prob = 0 
         for next_state in self._state_space:
             p_obs = self._observation_model(observation=obs, state=next_state)
             p_next_state = 0
             for state in self._state_space:
                 p_next_state += self._b[str(state)] * self._transition_model(next_state=next_state, state=state, action=action)            
             b_prime.update({str(next_state): p_obs * p_next_state})
-            total_prob += b_prime[str(next_state)]
-
+            total_prob += b_prime[str(next_state)] 
         for s, p in b_prime.items():
             b_prime[s] = p/total_prob
 
@@ -60,7 +66,6 @@ class BeliefUpdatingRandomAgent(object):
         if ax is None:
             ax = plt.gca()
         self._belief_state.render(ax)
-
 
     def __call__(self, obs):
         """Updates belief over possible current states given current observation and previous action
