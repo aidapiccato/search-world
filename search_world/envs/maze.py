@@ -87,7 +87,8 @@ class Maze(search_world.Env):
         adjacent_nodes = np.asarray([[0, 1], [1, 0], [0, -1], [-1, 0]]) + state
         adjacent_nodes = [self._maze[node_x, node_y] for (node_x, node_y) in adjacent_nodes]
         is_inf = np.any(np.all(np.isin(self._inf_positions, state, True), axis=1))
-        return (adjacent_nodes, is_inf)
+        is_target = np.all(state == self._target_position)
+        return (adjacent_nodes, is_inf, is_target)
 
     def _agent_observation(self) -> object:
         """Generates observation based on current location of agent. The observation is a binary vector of length 4 corresponding adjacent nodes have a wall, 0 otherwise. 
@@ -132,7 +133,7 @@ class Maze(search_world.Env):
         return state
 
     def _reward_func(self, state):
-        return np.all(state == self._target_position) * 10 + (1 - np.all(state == self._target_position)) * -1
+        return np.all(state == self._target_position) * 10 + (1 - np.all(state == self._target_position)) * -3
 
     def _take_action(self, action):
         """Updates agent position. 

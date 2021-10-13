@@ -15,6 +15,9 @@ class BeliefState(object):
         """
         return self._state_space[np.random.choice(len(self._state_space), p=list(self._b.values()))]
 
+    def __getitem__(self, state):
+        return self._b[str(state)]
+        
     def reset(self):
         """Reset belief state to uniform distribution over state space or given initial distribution
         """
@@ -84,6 +87,53 @@ class BeliefUpdatingRandomAgent(object):
         self._belief_state.update(obs, self._action)
         self._action = self._action_space.sample()
         return self._action
+
+class QMDPAgent(object):
+    def __init__(self, env, horizon=15):
+        self._env = env
+        self._horizon = horizon
+        self._belief_state = BeliefState(self._env)
+
+    def reset(self):
+        self._belief_state.reset()
+        self._state_space = self._env._state_space     
+        self._transition_func = self._env._transition_func
+        self._action_space = self._env.action_space
+        self._reward_model = self._env._reward_model
+        self._action = [0, 0]
+        self._lambda = 0.8
+        self._Q = self._q_func()
+        
+    def _q_func(self):
+        """Returns Q function over states
+        """
+        Q = {str(state): {str(action): 0 for action in self._action_space} for state in self._state_space}
+        for _ in range(self._horizon):
+            for state in self._state_space:
+                for action in self._action_space:
+                    state_prime = self._transition_func(state=state, action=action)
+                    r = self._reward_model(state_prime)
+                    max_q_a = np.amax([Q[str(state_prime)][str(action)] for action in self._action_space])
+                    Q[str(state)][str(action)] = r + self._lambda * max_q_a
+        return Q
+
+    def render(self, ax=None):
+        if ax is None: 
+            ax = plt.gca()
+        self._belief_state.render(ax)
+    
+    def __call__(self, obs):
+        self._belief_state.update(obs, self._action)        
+        action_vals = []
+        for action in self._action_space:
+            w_q_val = 0
+            for state in self._state_space:
+                w_q_val += self._belief_state[state] * self._Q[str(state)][str(action)]
+            action_vals.append(w_q_val)
+        self._action = self._action_space[np.random.choice(np.argwhere(action_vals == np.amax(action_vals)).flatten().tolist())]
+        return self._action
+
+
 class MLSAgent(object):
     def __init__(self, env, horizon=5):
         self._env = env
@@ -96,7 +146,6 @@ class MLSAgent(object):
         self._transition_func = self._env._transition_func
         self._action_space = self._env.action_space
         self._reward_model = self._env._reward_model
-        self._target_state = list(filter(lambda s: self._reward_model(s) > 0, self._state_space))[0]
         self._action = [0, 0]
         self._lambda = 0.9
         self._Q = self._q_func()
