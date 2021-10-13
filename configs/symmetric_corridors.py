@@ -8,7 +8,7 @@ from search_world.utils.maze_utils import symmetric_corridors
 def model_config():
     config = {
         'module': 'search_world.models.random',
-        'method': 'MLSDistanceAgent'
+        'method': 'MLSLookupDistanceAgent'
     }
     return config
 

@@ -1,7 +1,6 @@
 import numpy as np
+from itertools import product
 import matplotlib.pyplot as plt
-
-from numpy.lib.function_base import kaiser
 
 # TODO: Create agent base class with abstract methods; render, reset, __call__
 # TODO: Create class for Maze states
@@ -84,6 +83,53 @@ class BeliefUpdatingRandomAgent(object):
         """
         self._belief_state.update(obs, self._action)
         self._action = self._action_space.sample()
+        return self._action
+
+class MLSLookupDistanceAgent(object):
+    def __init__(self, env, horizon=3):
+        self._env = env
+        self._horizon = horizon
+        self._belief_state = BeliefState(self._env)
+
+    def reset(self):
+        self._belief_state.reset()
+
+        self._state_space = self._env._state_space     
+        self._transition_func = self._env._transition_func
+        self._action_space = self._env.action_space
+        self._reward_model = self._env._reward_model
+        self._target_state = list(filter(lambda s: self._reward_model(s) > 0, self._state_space))[0]
+        self._action = [0, 0]
+
+    def render(self, ax=None):
+        if ax is None: 
+            ax = plt.gca()
+        self._belief_state.render(ax)
+    
+    def _dist(self, state):
+        return np.linalg.norm(self._target_state - state)
+
+    def __call__(self, obs):
+        self._belief_state.update(obs, self._action)
+        self._mls = self._belief_state.mls()
+        # removing do-nothing action
+        action_space = list(filter(lambda a: not np.all(self._transition_func(state=self._mls, action=a) == self._mls), self._action_space))
+        # create all possible n-tuples of actions
+        decision_tree = list(product(action_space, repeat = self._horizon))
+        # for each n-tuple, find resulting state
+        end_states = []
+        cum_distances = []
+        for branch in decision_tree:
+            cum_dist = 0
+            state = self._mls
+            for action in branch:
+                state = self._transition_func(action=action, state=state)
+                cum_dist += self._dist(state)
+            end_states.append(state)
+            cum_distances.append(cum_dist)
+        # choose tuple where distance from resulting state to target is minimal
+        dist_minimizing_actions = decision_tree[np.argmin(cum_distances)]
+        self._action = dist_minimizing_actions[np.random.choice(len(dist_minimizing_actions))]
         return self._action
 
 class MLSDistanceAgent(object):
