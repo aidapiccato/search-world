@@ -1,7 +1,7 @@
 import numpy as np
 from itertools import product
 import matplotlib.pyplot as plt
-
+from ast import literal_eval
 # TODO: Create agent base class with abstract methods; render, reset, __call__
 # TODO: Create class for Maze states
 # TODO: Make state space an accessible property of environment; part of wrappers
@@ -83,6 +83,47 @@ class BeliefUpdatingRandomAgent(object):
         """
         self._belief_state.update(obs, self._action)
         self._action = self._action_space.sample()
+        return self._action
+class MLSAgent(object):
+    def __init__(self, env, horizon=5):
+        self._env = env
+        self._horizon = horizon
+        self._belief_state = BeliefState(self._env)
+
+    def reset(self):
+        self._belief_state.reset()
+        self._state_space = self._env._state_space     
+        self._transition_func = self._env._transition_func
+        self._action_space = self._env.action_space
+        self._reward_model = self._env._reward_model
+        self._target_state = list(filter(lambda s: self._reward_model(s) > 0, self._state_space))[0]
+        self._action = [0, 0]
+        self._lambda = 0.9
+        self._Q = self._q_func()
+        
+    def _q_func(self):
+        """Returns Q function over states
+        """
+        Q = {str(state): {str(action): 0 for action in self._action_space} for state in self._state_space}
+        for _ in range(self._horizon):
+            for state in self._state_space:
+                for action in self._action_space:
+                    state_prime = self._transition_func(state=state, action=action)
+                    r = self._reward_model(state_prime)
+                    max_q_a = np.amax([Q[str(state_prime)][str(action)] for action in self._action_space])
+                    Q[str(state)][str(action)] = r + self._lambda * max_q_a
+        return Q
+
+    def render(self, ax=None):
+        if ax is None: 
+            ax = plt.gca()
+        self._belief_state.render(ax)
+    
+    def __call__(self, obs):
+        self._belief_state.update(obs, self._action)
+        self._mls = self._belief_state.mls()
+        q_vals = np.asarray([self._Q[str(self._mls)][str(action)] for action in self._action_space])
+        self._action = self._action_space[np.random.choice(np.argwhere(q_vals == np.amax(q_vals)).flatten().tolist())]
         return self._action
 
 class MLSLookupDistanceAgent(object):

@@ -6,8 +6,8 @@ def symmetric_corridors():
     Returns:
         dict: dictionary containing maze and initial conditions
     """
-    length = np.random.choice(np.arange(3, 11, 2)) 
-    n_corridors = np.random.choice(np.arange(2, 8))
+    length = np.random.choice(np.arange(3, 7, 2)) 
+    n_corridors = np.random.choice(np.arange(2, 6))
     corridors_x = np.arange(1, 2 * n_corridors, 2)  
     corridors_y = np.arange(1, length+1)
     target_corridor = np.random.choice(corridors_x)

@@ -49,7 +49,7 @@ class MazeActionSpace(search_world.Space):
     
     def __getitem__(self, index):
         return self._action_space[index]
-        
+
     def __iter__(self):
         return iter(self._action_space)
 
@@ -98,7 +98,7 @@ class Maze(search_world.Env):
         return self._observation(self._agent_position)
 
     def agent_reward(self):
-        return np.all(self._agent_position == self._target_position) * 10
+        return self._reward_func(state=self._agent_position)
 
     def step(self, action):
         """ Executes one time step within the environment. 
@@ -132,7 +132,7 @@ class Maze(search_world.Env):
         return state
 
     def _reward_func(self, state):
-        return np.all(state == self._target_position) * 10
+        return np.all(state == self._target_position) * 10 + (1 - np.all(state == self._target_position)) * -1
 
     def _take_action(self, action):
         """Updates agent position. 
