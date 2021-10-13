@@ -1,10 +1,17 @@
-from os import stat_result
 import numpy as np
 import matplotlib.pyplot as plt
+
+# TODO: Create agent base class with abstract methods; render, reset, __call__
+# TODO: Create class for Maze states
 
 class BeliefState(object):
     def __init__(self, env):
         self._env = env
+
+    def mls(self):
+        """Returns most likely state, breaking ties randomly. 
+        """
+        return self._state_space[np.random.choice(len(self._state_space), p=list(self._b.values()))]
 
     def reset(self):
         """Reset belief state to uniform distribution over state space or given initial distribution
@@ -55,11 +62,7 @@ class BeliefUpdatingRandomAgent(object):
         self._belief_state = BeliefState(self._env)
     
     def reset(self):
-        if self._belief_state is not None:
-            self._belief_state.reset()
-        else:
-            self._belief_state = BeliefState(self._env)
-
+        self._belief_state.reset()
         self._action = [0, 0]
 
     def render(self, ax=None):
@@ -78,6 +81,36 @@ class BeliefUpdatingRandomAgent(object):
         """
         self._belief_state.update(obs, self._action)
         self._action = self._action_space.sample()
+        return self._action
+
+class MLSDistanceAgent(object):
+    def __init__(self, env):
+        self._env = env
+        self._belief_state = BeliefState(self._env)
+
+    def reset(self):
+        self._belief_state.reset()
+        # TODO: Make state space an accessible property of environment; part of wrapper
+        self._state_space = self._env._state_space     
+        self._transition_func = self._env._transition_func
+        self._action_space = self._env.action_space
+        self._reward_model = self._env._reward_model
+        self._target_state = list(filter(lambda s: self._reward_model(s) > 0, self._state_space))[0]
+        self._action = [0, 0]
+
+    def render(self, ax=None):
+        if ax is None: 
+            ax = plt.gca()
+        self._belief_state.render(ax)
+    
+    def _dist(self, state):
+        return self._target_state - state
+
+    def __call__(self, obs):
+        self._belief_state.update(obs, self._action)
+        self._mls = self._belief_state.mls()
+        new_dist = [np.linalg.norm(self._dist(self._transition_func(state=self._mls, action=action))) for action in self._action_space]
+        self._action = self._action_space[np.argmin(new_dist)]
         return self._action
 
 class RandomAgent(object):

@@ -15,6 +15,15 @@ class MazeObservationModel(object):
     def __call__(self, observation, state):
         return self._histogram[str(state)][str(observation)]
 
+class MazeRewardModel(object):
+    """Grid world reward model"""
+    def __init__(self, state_space, reward_func):
+        self._reward_map = {str(state): reward_func(state) for state in state_space}
+
+    def __call__(self, state):
+        return self._reward_map[str(state)]
+
+
 class MazeTransitionModel(object):
     """Grid world transition model
     """
@@ -38,6 +47,9 @@ class MazeActionSpace(search_world.Space):
     def sample(self):
         return self._action_space[np.random.choice(len(self._action_space))]
     
+    def __getitem__(self, index):
+        return self._action_space[index]
+        
     def __iter__(self):
         return iter(self._action_space)
 
@@ -103,7 +115,7 @@ class Maze(search_world.Env):
         self._take_action(action)
 
         done = False
-        reward = self.agent_reward()
+        reward = self._reward_func(self._agent_position)
 
 
         if np.all(self._agent_position == self._target_position):
@@ -118,6 +130,9 @@ class Maze(search_world.Env):
         if self._is_valid(new_state):
             return new_state
         return state
+
+    def _reward_func(self, state):
+        return np.all(state == self._target_position) * 10
 
     def _take_action(self, action):
         """Updates agent position. 
@@ -169,4 +184,5 @@ class Maze(search_world.Env):
         self._observation_space = [self._observation(state) for state in self._state_space]        
         self._observation_model = MazeObservationModel(self._observation_space, self._state_space)
         self._transition_model = MazeTransitionModel(self._state_space, self.action_space, self._transition_func)
+        self._reward_model = MazeRewardModel(self._state_space, self._reward_func)
         return self._agent_observation()
