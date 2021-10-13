@@ -1,8 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+from numpy.lib.function_base import kaiser
+
 # TODO: Create agent base class with abstract methods; render, reset, __call__
 # TODO: Create class for Maze states
+# TODO: Make state space an accessible property of environment; part of wrappers
 
 class BeliefState(object):
     def __init__(self, env):
@@ -90,7 +93,7 @@ class MLSDistanceAgent(object):
 
     def reset(self):
         self._belief_state.reset()
-        # TODO: Make state space an accessible property of environment; part of wrapper
+
         self._state_space = self._env._state_space     
         self._transition_func = self._env._transition_func
         self._action_space = self._env.action_space
@@ -104,13 +107,16 @@ class MLSDistanceAgent(object):
         self._belief_state.render(ax)
     
     def _dist(self, state):
-        return self._target_state - state
+        return np.linalg.norm(self._target_state - state)
 
     def __call__(self, obs):
         self._belief_state.update(obs, self._action)
         self._mls = self._belief_state.mls()
-        new_dist = [np.linalg.norm(self._dist(self._transition_func(state=self._mls, action=action))) for action in self._action_space]
-        self._action = self._action_space[np.argmin(new_dist)]
+        dist = self._dist(self._mls)
+        # removing actions that wouldn't change state
+        action_space = list(filter(lambda a: not np.all(self._transition_func(state=self._mls, action=a) == self._mls), self._action_space))
+        new_dist = [self._dist(self._transition_func(state=self._mls, action=action)) - dist for action in action_space]
+        self._action = action_space[np.argmin(new_dist)]
         return self._action
 
 class RandomAgent(object):
