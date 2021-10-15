@@ -24,12 +24,14 @@ def env_config():
     config = {
         'constructor': Maze,
         'kwargs':{
+            'max_steps': 100,
             'maze_gen_func': symmetric_corridors,
             'maze_gen_func_kwargs': {
                 'length': 7, 
                 'n_corridors': 5,
                 'target_position': 1,
-                'agent_position': 2
+                'agent_position': 2,
+                
             }
         }
     }
@@ -44,7 +46,7 @@ def get_config():
             'model_kwargs': model_kwargs_config(),
             'env': env_config(),
             'num_training_steps': 1000, 
-            'render': True
+            'render': False
         }    
     }
     return config

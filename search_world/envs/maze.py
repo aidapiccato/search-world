@@ -1,3 +1,4 @@
+from numpy.lib.function_base import kaiser
 import search_world
 import hashlib
 import numpy as np
@@ -66,7 +67,7 @@ class MazeActionSpace(search_world.Space):
         return (-1 <= a).all() and (a <= 1).all() and len(np.flatnonzero(np.abs(a) > 0)) == 1
 
 class Maze(search_world.Env):
-    def __init__(self, maze_gen_func, maze_gen_func_kwargs) -> None:
+    def __init__(self, maze_gen_func, maze_gen_func_kwargs, max_steps) -> None:
         """Constructor for maze class
 
         Args:
@@ -74,9 +75,11 @@ class Maze(search_world.Env):
         """
         super().__init__() 
         self.action_space = MazeActionSpace()
+        self._max_steps = max_steps
         self._maze_gen_func = maze_gen_func
         self._maze_gen_func_kwargs = maze_gen_func_kwargs
         self._maze = None
+
 
     def _observation(self, state) -> object:
         """Generates observation for given coordinate position. Useful for constructing entire observation space
@@ -112,6 +115,7 @@ class Maze(search_world.Env):
             done (bool): True if agent has found target or environment times out, False otherwise.
             info (dict): auxiliary information
         """ 
+
         self._take_action(action)
 
         done = False
@@ -123,6 +127,11 @@ class Maze(search_world.Env):
 
         obs = self._agent_observation()
 
+        self._num_steps += 1
+
+        if self._num_steps >= self._max_steps:
+            done = True
+        
         return obs, reward, done, {}
 
     def _transition_func(self, state, action):
@@ -186,4 +195,6 @@ class Maze(search_world.Env):
         self._observation_model = MazeObservationModel(self._observation_space, self._state_space)
         self._transition_model = MazeTransitionModel(self._state_space, self.action_space, self._transition_func)
         self._reward_model = MazeRewardModel(self._state_space, self._reward_func)
+
+        self._num_steps = 0
         return self._agent_observation()

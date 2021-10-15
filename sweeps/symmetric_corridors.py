@@ -8,7 +8,6 @@ statements are the only way this file communicates the sweep to the launch
 script.
 """
 
-import numpy as np
 from python_utils.configs import sweep
 
 _CONFIG_NAME = 'configs.symmetric_corridors'
@@ -16,14 +15,14 @@ _CONFIG_NAME = 'configs.symmetric_corridors'
 
 def _get_param_sweep():
     """Return the sweep we want to launch."""
-    n_corridors = [2, 3, 4]
+    n_corridors = [2, 4]
     lengths = [3, 5, 7] 
 
     param_sweep = []
 
     for c in n_corridors:
         for l in lengths:
-            states = list(range(c * l + c)) 
+            states = list(range(0, c * l + c, 3)) 
             maze_initial_condition_sweep = sweep.product(
                 sweep.zipper(
                     sweep.discrete(('kwargs', 'env', 'kwargs', 'maze_gen_func_kwargs', 'length'), [l]),
