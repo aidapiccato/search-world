@@ -12,3 +12,7 @@ In the search-world directory are also trainer.py, which generates a general mod
 ## Running locally
 
 `python3 main.py --config='configs.hallway'`
+
+## Running on Openmind
+
+`bash openmind_launch.sh sweeps/symmetric_corridors.py`
