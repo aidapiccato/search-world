@@ -16,7 +16,10 @@ def env_config():
     config = {
         'constructor': Maze,
         'kwargs':{
-            'maze_gen_func': hallway
+            'maze_gen_func': hallway,
+            'maze_gen_func_kwargs': {
+                'length': 7
+            }
         }
     }
     return config

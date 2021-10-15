@@ -66,16 +66,16 @@ class MazeActionSpace(search_world.Space):
         return (-1 <= a).all() and (a <= 1).all() and len(np.flatnonzero(np.abs(a) > 0)) == 1
 
 class Maze(search_world.Env):
-    def __init__(self, maze_gen_func) -> None:
+    def __init__(self, maze_gen_func, maze_gen_func_kwargs) -> None:
         """Constructor for maze class
 
         Args:
             _maze_gen_func (func): Function to generate mazes
         """
-        super().__init__()
-
+        super().__init__() 
         self.action_space = MazeActionSpace()
         self._maze_gen_func = maze_gen_func
+        self._maze_gen_func_kwargs = maze_gen_func_kwargs
         self._maze = None
 
     def _observation(self, state) -> object:
@@ -174,11 +174,12 @@ class Maze(search_world.Env):
             observation (object): observation corresponding to initial state
         """
         # creating maze and setting initial conditions
-        maze = self._maze_gen_func()
+        maze = self._maze_gen_func(**self._maze_gen_func_kwargs)
         self._maze = maze['maze']
         self._target_position = maze['target_position']
         self._inf_positions = maze['inf_positions']
         self._agent_position = maze['agent_position']
+
         # creating state and observation spaces
         self._state_space = np.vstack(np.where(self._maze == 0)).T
         self._observation_space = [self._observation(state) for state in self._state_space]        

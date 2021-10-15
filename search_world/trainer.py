@@ -9,8 +9,9 @@ import logging
 import matplotlib.pyplot as plt
 
 class Trainer(object):
-    def __init__(self, model, env, num_training_steps, render):
+    def __init__(self, model, model_kwargs, env, num_training_steps, render):
         self._model = model
+        self._model_kwargs = model_kwargs
         self._env = env
         self._num_training_steps = num_training_steps
         self._render = render
@@ -21,7 +22,7 @@ class Trainer(object):
     def __call__(self, log_dir):
         obs = self._env.reset()
 
-        model = self._model(self._env)
+        model = self._model(self._env, **self._model_kwargs)
         model.reset()
         plot_every = 1
         plt.ion()

@@ -1,7 +1,7 @@
 import numpy as np
 from itertools import product
 import matplotlib.pyplot as plt
-from ast import literal_eval
+
 # TODO: Create agent base class with abstract methods; render, reset, __call__
 # TODO: Create class for Maze states
 # TODO: Make state space an accessible property of environment; part of wrappers
@@ -84,10 +84,12 @@ class BeliefUpdatingRandomAgent(object):
         self._belief_state.update(obs, self._action)
         self._action = self._action_space.sample()
         return self._action
+
 class MLSAgent(object):
-    def __init__(self, env, horizon=5):
+    def __init__(self, env, horizon, discount_factor):
         self._env = env
         self._horizon = horizon
+        self._lambda = discount_factor
         self._belief_state = BeliefState(self._env)
 
     def reset(self):
@@ -98,7 +100,6 @@ class MLSAgent(object):
         self._reward_model = self._env._reward_model
         self._target_state = list(filter(lambda s: self._reward_model(s) > 0, self._state_space))[0]
         self._action = [0, 0]
-        self._lambda = 0.9
         self._Q = self._q_func()
         
     def _q_func(self):
