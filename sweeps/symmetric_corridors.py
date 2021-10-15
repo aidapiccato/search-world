@@ -8,6 +8,7 @@ statements are the only way this file communicates the sweep to the launch
 script.
 """
 
+import numpy as np
 from python_utils.configs import sweep
 
 _CONFIG_NAME = 'configs.symmetric_corridors'
@@ -15,27 +16,24 @@ _CONFIG_NAME = 'configs.symmetric_corridors'
 
 def _get_param_sweep():
     """Return the sweep we want to launch."""
-    param_sweep = sweep.product(
-        sweep.discrete(('kwargs', 'env', 'kwargs', 'maze_gen_func_kwargs', 'length'), ['12', '13']),
-        sweep.discrete(('kwargs', 'env', 'kwargs', 'maze_gen_func_kwargs', 'n_corridors'), ['4', '5']))
-    #     sweep.zipper(
-    #         sweep.discrete(
-    #             ('kwargs', 'sub_module', 'kwargs', 'd', 'kwargs', 'e'),
-    #             [16, 17, 18]),
-    #         sweep.discrete(
-    #             ('kwargs', 'sub_module', 'kwargs', 'd', 'kwargs', 'f'),
-    #             [17, 18, 19]),
-    #     ),
-    # )
+    n_corridors = [2, 3, 4]
+    lengths = [3, 5, 7] 
 
-    # param_sweep_0 = sweep.product(
-    #     sweep.discrete(('kwargs', 'a'), [0.11, 0.12]),
-    #     sub_module_param_sweep,
-    # )
-    # param_sweep_1 = sweep.discrete(('kwargs', 'a'), [0.13, 0.14])
+    param_sweep = []
 
-    # param_sweep = sweep.chain(param_sweep_0, param_sweep_1)
-
+    for c in n_corridors:
+        for l in lengths:
+            states = list(range(c * l + c)) 
+            maze_initial_condition_sweep = sweep.product(
+                sweep.zipper(
+                    sweep.discrete(('kwargs', 'env', 'kwargs', 'maze_gen_func_kwargs', 'length'), [l]),
+                    sweep.discrete(('kwargs', 'env', 'kwargs', 'maze_gen_func_kwargs', 'n_corridors'), [c])),
+                sweep.product(
+                    sweep.discrete(('kwargs', 'env', 'kwargs', 'maze_gen_func_kwargs', 'agent_position'), states), 
+                    sweep.discrete(('kwargs', 'env', 'kwargs', 'maze_gen_func_kwargs', 'target_position'), states)) 
+            )            
+            param_sweep = sweep.chain(param_sweep, maze_initial_condition_sweep)
+            
     return param_sweep
 
 
@@ -43,7 +41,7 @@ def main():
     """Generate and write sweep of config overrides."""
 
 
-    print(_CONFIG_NAME)
+    print(_CONFIG_NAME)    
 
     # Define the sweep we want to launch:
     param_sweep = _get_param_sweep()
@@ -67,7 +65,7 @@ def main():
     # because openmind_launch.sh relies on these prints, piping them into an
     # array that it uses to launch to job array.
     for json_spec in sweep.serialize_sweep_elements(param_sweep):
-        print(json_spec)
+        print(json_spec) 
 
 
 if __name__ == '__main__':

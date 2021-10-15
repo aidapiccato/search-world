@@ -3,26 +3,39 @@ import numpy as np
 def symmetric_corridors(length, n_corridors, target_position, agent_position):
     """Generates maze of symmetric corridor type, with no informative nodes
 
+    Args:
+        length ([type]): [description]
+        n_corridors ([type]): [description]
+        target_position ([type]): [description]
+        agent_position ([type]): [description]
+
     Returns:
         dict: dictionary containing maze and initial conditions
-    """
+    """ 
+
+    # x- and y-coordinates of empty nodes
     corridors_x = np.arange(1, 2 * n_corridors, 2)  
     corridors_y = np.arange(1, length+1)
-    target_corridor = corridors_x[target_position]
-    target_height = corridors_y[target_position]
-    agent_corridor = corridors_x[agent_position]
-    agent_height = corridors_y[agent_position]
-    while np.all([agent_corridor, agent_height] 
-        == [target_corridor, target_height]):
-            agent_corridor = np.random.choice(corridors_x)
-            agent_height = np.random.choice(corridors_y)
+
     maze = np.ones((length + 2, 2 * n_corridors + 1))    
+
+    # creating vertical corridors 
     for x in corridors_x:
         maze[corridors_y, x] = np.zeros(length)
+
+    # making central horizontal corridor 
     maze[int(np.ceil(length/2)), 1:2 * n_corridors] = 0
+
+    # no informative nodes 
     inf_positions = np.empty((0, 2))
-    target_position = np.asarray([target_height, target_corridor])
-    agent_position = np.asarray([agent_height, agent_corridor])
+    
+
+    # creating set of all possible start states for agents    
+    states = np.argwhere(maze == 0)
+    # finding agent and target position by indexing into states
+    target_position = states[target_position % len(states)]
+    agent_position = states[agent_position % len(states)]
+
     return dict(inf_positions=inf_positions, maze=maze, target_position=target_position, agent_position=agent_position)
 
 
