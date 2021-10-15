@@ -91,7 +91,7 @@ class MLSAgent(object):
         self._horizon = horizon
         self._lambda = discount_factor
         self._belief_state = BeliefState(self._env)
-
+ 
     def reset(self):
         self._belief_state.reset()
         self._state_space = self._env._state_space     
@@ -188,6 +188,7 @@ class MLSDistanceAgent(object):
         self._reward_model = self._env._reward_model
         self._target_state = list(filter(lambda s: self._reward_model(s) > 0, self._state_space))[0]
         self._action = [0, 0]
+        return self._action
 
     def render(self, ax=None):
         if ax is None: 

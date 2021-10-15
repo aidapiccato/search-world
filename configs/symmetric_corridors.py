@@ -45,7 +45,7 @@ def get_config():
             'model': model_config(),
             'model_kwargs': model_kwargs_config(),
             'env': env_config(),
-            'num_training_steps': 1000, 
+            'num_training_steps': 10, 
             'render': False
         }    
     }

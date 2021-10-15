@@ -6,6 +6,8 @@ $ python3 tensorboard --log_dir=logs/$run_number/tensorboard
 """
 
 import logging
+import pickle as pkl
+import os
 import matplotlib.pyplot as plt
 
 class Trainer(object):
@@ -23,11 +25,11 @@ class Trainer(object):
         obs = self._env.reset()
 
         model = self._model(self._env, **self._model_kwargs)
-        model.reset()
+        action = model.reset()
         plot_every = 1
         plt.ion()
         fig, axs = plt.subplots(nrows=2, ncols=1)
-
+        vector_data = []
         for step in range(self._num_training_steps):
 
             logging.info('Step: {} of {}'.format(
@@ -50,4 +52,15 @@ class Trainer(object):
                 obs = self._env.reset()
                 model.reset()
 
+            vector_data.append({'obs': obs, 'reward': reward, 'action': action, 'done': done, 'step': step, 'info': info})
+
         self._env.close()
+        scalar_data = {'env': self._env, 'model': model}
+        logging.info('Writing data.')
+        write_dir = os.path.join(log_dir, 'data')
+        os.makedirs(write_dir)
+        with open(os.path.join(write_dir, 'vector'), 'wb') as f:
+            pkl.dump(vector_data, f)
+
+        with open(os.path.join(write_dir, 'scalar'), 'wb') as f:
+            pkl.dump(scalar_data, f)

@@ -132,7 +132,8 @@ class Maze(search_world.Env):
         if self._num_steps >= self._max_steps:
             done = True
         
-        return obs, reward, done, {}
+        info = {'agent_position': self._agent_position}
+        return obs, reward, done, info
 
     def _transition_func(self, state, action):
         new_state = state + action
