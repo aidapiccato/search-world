@@ -10,12 +10,12 @@ script.
 
 from python_utils.configs import sweep
 
-_CONFIG_NAME = 'configs.complex'
+_CONFIG_NAME = 'configs.symmetric_corridors'
 
 
 def _get_param_sweep():
     """Return the sweep we want to launch."""
-    sub_module_param_sweep = sweep.product(
+    param_sweep = sweep.product(
         sweep.discrete(('kwargs', 'env', 'kwargs', 'maze_gen_func_kwargs', 'length'), ['12', '13']),
         sweep.discrete(('kwargs', 'env', 'kwargs', 'maze_gen_func_kwargs', 'n_corridors'), ['4', '5']))
     #     sweep.zipper(
@@ -28,13 +28,13 @@ def _get_param_sweep():
     #     ),
     # )
 
-    param_sweep_0 = sweep.product(
-        sweep.discrete(('kwargs', 'a'), [0.11, 0.12]),
-        sub_module_param_sweep,
-    )
-    param_sweep_1 = sweep.discrete(('kwargs', 'a'), [0.13, 0.14])
+    # param_sweep_0 = sweep.product(
+    #     sweep.discrete(('kwargs', 'a'), [0.11, 0.12]),
+    #     sub_module_param_sweep,
+    # )
+    # param_sweep_1 = sweep.discrete(('kwargs', 'a'), [0.13, 0.14])
 
-    param_sweep = sweep.chain(param_sweep_0, param_sweep_1)
+    # param_sweep = sweep.chain(param_sweep_0, param_sweep_1)
 
     return param_sweep
 
@@ -58,10 +58,10 @@ def main():
     # scalars/images should be logged, batch size, etc. that I don't want to
     # sweep over but want to override for array launches from the values in the
     # config. Here's an example:
-    param_sweep = sweep.product(
-        param_sweep,
-        sweep.discrete(('kwargs', 'b'), [-0.4]),
-    )
+    # param_sweep = sweep.product(
+    #     param_sweep,
+    #     sweep.discrete(('kwargs', 'b'), [-0.4]),
+    # )
 
     # Print one spec per line. It is important to print these out line by line,
     # because openmind_launch.sh relies on these prints, piping them into an

@@ -7,7 +7,7 @@
 #SBATCH -o ./logs/%A/slurm_logs/%a.out
 #SBATCH --time=24:00:00
 #SBATCH --mem=1G
-#SBATCH --partition=jazayeri
+#SBATCH --partition=fiete
 
 CONFIG_NAME=$1
 OVERRIDES_SERIALIZED=$2
