@@ -101,6 +101,7 @@ class MLSAgent(object):
         self._target_state = list(filter(lambda s: self._reward_model(s) > 0, self._state_space))[0]
         self._action = [0, 0]
         self._Q = self._q_func()
+        return self._action
         
     def _q_func(self):
         """Returns Q function over states

@@ -1,6 +1,6 @@
 import numpy as np
 
-def symmetric_corridors(length, n_corridors, target_position, agent_position):
+def symmetric_corridors(length, n_corridors, target_position, agent_initial_position):
     """Generates maze of symmetric corridor type, with no informative nodes
 
     Args:
@@ -34,13 +34,13 @@ def symmetric_corridors(length, n_corridors, target_position, agent_position):
     states = np.argwhere(maze == 0)
     # finding agent and target position by indexing into states
     target_position = states[target_position % len(states)]
-    agent_position = states[agent_position % len(states)]
+    agent_initial_position = states[agent_initial_position % len(states)]
 
-    return dict(inf_positions=inf_positions, maze=maze, target_position=target_position, agent_position=agent_position)
+    return dict(inf_positions=inf_positions, maze=maze, target_position=target_position, agent_initial_position=agent_initial_position)
 
 
 
-def hallway(length, target_position, agent_position):
+def hallway(length, target_position, agent_initial_position):
     """Generates maze of hallway type, consisting of long corridor with offshoot leaves. Some leaves contain informative nodes    
 
     Returns:
@@ -68,5 +68,5 @@ def hallway(length, target_position, agent_position):
 
     inf_positions = np.vstack([np.asarray([1, inf_pos]) + [1, 1] for inf_pos in inf_positions])
 
-    agent_position = np.asarray([1, np.arange(length)[agent_position] + 1])        
-    return dict(maze=maze, target_position=target_position, inf_positions=inf_positions, agent_position=agent_position)
+    agent_initial_position = np.asarray([1, np.arange(length)[agent_initial_position] + 1])        
+    return dict(maze=maze, target_position=target_position, inf_positions=inf_positions, agent_initial_position=agent_initial_position)

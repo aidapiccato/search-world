@@ -16,7 +16,7 @@ _CONFIG_NAME = 'configs.symmetric_corridors'
 def _get_param_sweep():
     """Return the sweep we want to launch."""
     n_corridors = [2, 4]
-    lengths = [3, 5, 7] 
+    lengths = [3, 5] 
 
     param_sweep = []
 
@@ -28,7 +28,7 @@ def _get_param_sweep():
                     sweep.discrete(('kwargs', 'env', 'kwargs', 'maze_gen_func_kwargs', 'length'), [l]),
                     sweep.discrete(('kwargs', 'env', 'kwargs', 'maze_gen_func_kwargs', 'n_corridors'), [c])),
                 sweep.product(
-                    sweep.discrete(('kwargs', 'env', 'kwargs', 'maze_gen_func_kwargs', 'agent_position'), states), 
+                    sweep.discrete(('kwargs', 'env', 'kwargs', 'maze_gen_func_kwargs', 'agent_initial_position'), states), 
                     sweep.discrete(('kwargs', 'env', 'kwargs', 'maze_gen_func_kwargs', 'target_position'), states)) 
             )            
             param_sweep = sweep.chain(param_sweep, maze_initial_condition_sweep)
@@ -39,30 +39,12 @@ def _get_param_sweep():
 def main():
     """Generate and write sweep of config overrides."""
 
-
     print(_CONFIG_NAME)    
 
-    # Define the sweep we want to launch:
     param_sweep = _get_param_sweep()
 
     param_sweep = sweep.add_log_dir_sweep(param_sweep)
 
-    # Note, it is absolutely fine to add more overrides to the sweep here that
-    # you don't want to include in the log_dir (to keep the log_dir short). But
-    # since the log_dir override has already been added be sure to not add any
-    # additional elements to the sweep, i.e. make sure that anything added here
-    # is a singleton sweep. For example, I often add parameters like how often
-    # scalars/images should be logged, batch size, etc. that I don't want to
-    # sweep over but want to override for array launches from the values in the
-    # config. Here's an example:
-    # param_sweep = sweep.product(
-    #     param_sweep,
-    #     sweep.discrete(('kwargs', 'b'), [-0.4]),
-    # )
-
-    # Print one spec per line. It is important to print these out line by line,
-    # because openmind_launch.sh relies on these prints, piping them into an
-    # array that it uses to launch to job array.
     for json_spec in sweep.serialize_sweep_elements(param_sweep):
         print(json_spec) 
 

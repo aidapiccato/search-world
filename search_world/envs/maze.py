@@ -1,6 +1,4 @@
-from numpy.lib.function_base import kaiser
 import search_world
-import hashlib
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -103,6 +101,9 @@ class Maze(search_world.Env):
     def agent_reward(self):
         return self._reward_func(state=self._agent_position)
 
+    def info(self):
+        return self._maze_gen_func_kwargs
+    
     def step(self, action):
         """ Executes one time step within the environment. 
 
@@ -188,7 +189,8 @@ class Maze(search_world.Env):
         self._maze = maze['maze']
         self._target_position = maze['target_position']
         self._inf_positions = maze['inf_positions']
-        self._agent_position = maze['agent_position']
+        self._agent_initial_position = maze['agent_initial_position']
+        self._agent_position = self._agent_initial_position
 
         # creating state and observation spaces
         self._state_space = np.vstack(np.where(self._maze == 0)).T
