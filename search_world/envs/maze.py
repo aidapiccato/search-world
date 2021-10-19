@@ -187,7 +187,7 @@ class Maze(search_world.Env):
         return state
 
     def _reward_func(self, state):
-        return np.all(state == self._target_position) * 10 + (1 - np.all(state == self._target_position)) * -1
+        return np.all(state == self._target_position) * 10 + (1 - np.all(state == self._target_position)) * -3
 
     def _take_action(self, action):
         """Updates agent position. 
