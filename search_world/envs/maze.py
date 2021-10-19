@@ -1,7 +1,7 @@
 import search_world
 import numpy as np
 import matplotlib.pyplot as plt
-
+import sys
 class MazeObservationModel(object):
     """Grid world observation model. 
     """
@@ -88,7 +88,8 @@ class Maze(search_world.Env):
         adjacent_nodes = np.asarray([[0, 1], [1, 0], [0, -1], [-1, 0]]) + state
         adjacent_nodes = [self._maze[node_x, node_y] for (node_x, node_y) in adjacent_nodes]
         is_inf = np.any(np.all(np.isin(self._inf_positions, state, True), axis=1))
-        return (adjacent_nodes, is_inf)
+        is_target = np.all(state == self._target_position)
+        return (adjacent_nodes, is_inf, is_target)
 
     def _agent_observation(self) -> object:
         """Generates observation based on current location of agent. The observation is a binary vector of length 4 corresponding adjacent nodes have a wall, 0 otherwise. 
@@ -102,7 +103,9 @@ class Maze(search_world.Env):
         return self._reward_func(state=self._agent_position)
 
     def info(self):
-        return self._maze_gen_func_kwargs
+        info =  self._maze_gen_func_kwargs
+        info.update({'min_dist': self._min_dist, 'max_dist': self._max_dist})
+        return info
     
     def step(self, action):
         """ Executes one time step within the environment. 
@@ -135,6 +138,47 @@ class Maze(search_world.Env):
         
         info = {'agent_position': self._agent_position}
         return obs, reward, done, info
+
+
+    def _find_shortest_path_is_valid(self,maze, visited, x, y):
+        return 0 <= x < maze.shape[0] and 0 <= y < maze.shape[1] and not (maze[x][y] == 1 or visited[x][y])
+
+    def _find_shortest_path_helper(self, maze, visited, x, y, dest, min_dist=sys.maxsize, dist=0):
+
+        # if you've reached destination, return minimum
+        if np.all((x, y) == dest):
+            return min(dist, min_dist)
+
+        visited[x][y] = 1
+
+        if self._find_shortest_path_is_valid(maze, visited, x+1, y):
+            min_dist = self._find_shortest_path_helper(maze, visited, x + 1, y, dest, min_dist, dist+1)
+
+        if self._find_shortest_path_is_valid(maze, visited, x, y+1):
+            min_dist = self._find_shortest_path_helper(maze, visited, x, y+1, dest, min_dist, dist+1)
+
+        if self._find_shortest_path_is_valid(maze, visited, x-1, y):
+            min_dist = self._find_shortest_path_helper(maze, visited, x-1, y, dest, min_dist, dist+1)
+
+        if self._find_shortest_path_is_valid(maze, visited, x, y-1):
+            min_dist = self._find_shortest_path_helper(maze, visited, x, y-1, dest, min_dist, dist+1)
+
+        visited[x][y] = 0
+
+        return min_dist
+
+
+    def _find_shortest_path(self):
+        # TODO: Document _find_shortest_path
+        # TODO: Move to maze_utils 
+        s_x, s_y = self._agent_initial_position        
+        d_x, d_y = self._target_position
+
+        visited = np.zeros_like(self._maze)
+
+        min_dist = self._find_shortest_path_helper(self._maze, visited, s_x, s_y, (d_x, d_y))
+        return min_dist
+
 
     def _transition_func(self, state, action):
         new_state = state + action
@@ -179,6 +223,12 @@ class Maze(search_world.Env):
         ax.add_artist(agent)
         ax.set_title('obs = {}, reward={}'.format(self._agent_observation(), self.agent_reward()))
 
+    def _find_longest_path(self):
+        # TODO: Make this not specific to the H mazes. Currently it is!
+        v = self._state_space.shape[0]
+        e = (self._maze_gen_func_kwargs['length'] - 1) * self._maze_gen_func_kwargs['n_corridors'] + self._maze_gen_func_kwargs['n_corridors']
+        return 2 * v * e
+
     def reset(self):
         """Generates new maze, target position, and agent position
         Returns:
@@ -198,6 +248,9 @@ class Maze(search_world.Env):
         self._observation_model = MazeObservationModel(self._observation_space, self._state_space)
         self._transition_model = MazeTransitionModel(self._state_space, self.action_space, self._transition_func)
         self._reward_model = MazeRewardModel(self._state_space, self._reward_func)
-
+        self._min_dist = self._find_shortest_path()
+        self._max_dist = self._find_longest_path()
         self._num_steps = 0
-        return self._agent_observation()
+        # obs, reward, done, info
+
+        return self.step([0, 0])

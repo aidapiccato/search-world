@@ -22,23 +22,36 @@ class Trainer(object):
         pass
 
     def __call__(self, log_dir):
-        obs = self._env.reset()
+        obs, reward, done, info = self._env.reset()
+
         job_id = log_dir.rsplit('/', 1)[-1]
-        model = self._model(self._env, **self._model_kwargs)
-        action = model.reset()
+        model = self._model(self._env, **self._model_kwargs) 
+        model.reset()
+        action = [0, 0]
         plot_every = 1
         plt.ion()
         fig, axs = plt.subplots(nrows=2, ncols=1)
         vector_data = []
+        step = -1
+
+        if done: 
+            # if done is true on the first timestep, don't run!
+            return
+        vector_data.append({'obs': obs, 'job_id': job_id, 'reward': reward, 'action': action, 'done': done, 'step': step, 'info': info})
         for step in range(self._num_training_steps):
 
             logging.info('Step: {} of {}'.format(
                 step, self._num_training_steps))
 
             action = model(obs)
+            # action will be one done in response to current obs, reward            
 
             obs, reward, done, info = self._env.step(action)
-            logging.info('action={}, obs={}, reward={}, done={}, info={}'.format(action, obs, reward, done, info))
+
+            logging.info('action={}, obs={}, reward={}, done={}, info={}'.format(action, obs, reward, done, info))            
+
+            # savig vectorized data
+            vector_data.append({'obs': obs, 'job_id': job_id, 'reward': reward, 'action': action, 'done': done, 'step': step, 'info': info})
 
             if self._render and step % plot_every == 0:
                 for ax in axs:
@@ -49,10 +62,10 @@ class Trainer(object):
                 plt.pause(0.1)
 
             if done: 
-                obs = self._env.reset()
-                action = model.reset()
-
-            vector_data.append({'obs': obs, 'job_id': job_id, 'reward': reward, 'action': action, 'done': done, 'step': step, 'info': info})
+                obs, reward, done, info = self._env.reset() 
+                model.reset()
+                action = [0, 0]
+                vector_data.append({'obs': obs, 'job_id': job_id, 'reward': reward, 'action': action, 'done': done, 'step': step, 'info': info})
 
         self._env.close()
         scalar_data = {'env': self._env, 'model': model}

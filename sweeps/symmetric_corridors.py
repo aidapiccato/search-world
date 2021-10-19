@@ -15,11 +15,14 @@ _CONFIG_NAME = 'configs.symmetric_corridors'
 
 def _get_param_sweep():
     """Return the sweep we want to launch."""
-    n_corridors = [2, 4]
-    lengths = [3, 5] 
+    # n_corridors = [2, 3, 4, 5]
+    # lengths = [3, 5, 7, 9] 
+
+
+    n_corridors = [4]
+    lengths = [3, 5, 7, 9] 
 
     param_sweep = []
-
     for c in n_corridors:
         for l in lengths:
             states = list(range(0, c * l + c, 3)) 
@@ -32,7 +35,7 @@ def _get_param_sweep():
                     sweep.discrete(('kwargs', 'env', 'kwargs', 'maze_gen_func_kwargs', 'target_position'), states)) 
             )            
             param_sweep = sweep.chain(param_sweep, maze_initial_condition_sweep)
-            
+
     return param_sweep
 
 
@@ -43,8 +46,14 @@ def main():
 
     param_sweep = _get_param_sweep()
 
+    param_sweep = sweep.product(
+        param_sweep,
+        sweep.discrete(('kwargs', 'model', 'method'), ['MLSAgent']),
+    )
+    
     param_sweep = sweep.add_log_dir_sweep(param_sweep)
-
+    
+   
     for json_spec in sweep.serialize_sweep_elements(param_sweep):
         print(json_spec) 
 

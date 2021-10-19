@@ -27,10 +27,10 @@ def env_config():
             'max_steps': 100,
             'maze_gen_func': symmetric_corridors,
             'maze_gen_func_kwargs': {
-                'length': 7, 
-                'n_corridors': 5,
-                'target_position': 1,
-                'agent_initial_position': 2,                
+                'length': 5, 
+                'n_corridors': 4,
+                'target_position': 9,
+                'agent_initial_position': 9,                
             }
         }
     }
@@ -44,7 +44,7 @@ def get_config():
             'model': model_config(),
             'model_kwargs': model_kwargs_config(),
             'env': env_config(),
-            'num_training_steps': 10, 
+            'num_training_steps': 200, 
             'render': False
         }    
     }
