@@ -141,11 +141,12 @@ class QMDPAgent(object):
 
 
 class MLSAgent(object):
-    def __init__(self, env, horizon=5):
+    def __init__(self, env, horizon, discount_factor):
         self._env = env
         self._horizon = horizon
+        self._lambda = discount_factor
         self._belief_state = BeliefState(self._env)
-
+ 
     def reset(self):
         self._belief_state.reset()
         self._state_space = self._env._state_space     
@@ -153,8 +154,8 @@ class MLSAgent(object):
         self._action_space = self._env.action_space
         self._reward_model = self._env._reward_model
         self._action = [0, 0]
-        self._lambda = 0.9
         self._Q = self._q_func()
+        return self._action
         
     def _q_func(self):
         """Returns Q function over states
@@ -242,6 +243,7 @@ class MLSDistanceAgent(object):
         self._reward_model = self._env._reward_model
         self._target_state = list(filter(lambda s: self._reward_model(s) > 0, self._state_space))[0]
         self._action = [0, 0]
+        return self._action
 
     def render(self, ax=None):
         if ax is None: 

@@ -1,5 +1,4 @@
 import search_world
-import hashlib
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -66,17 +65,19 @@ class MazeActionSpace(search_world.Space):
         return (-1 <= a).all() and (a <= 1).all() and len(np.flatnonzero(np.abs(a) > 0)) == 1
 
 class Maze(search_world.Env):
-    def __init__(self, maze_gen_func) -> None:
+    def __init__(self, maze_gen_func, maze_gen_func_kwargs, max_steps) -> None:
         """Constructor for maze class
 
         Args:
             _maze_gen_func (func): Function to generate mazes
         """
-        super().__init__()
-
+        super().__init__() 
         self.action_space = MazeActionSpace()
+        self._max_steps = max_steps
         self._maze_gen_func = maze_gen_func
+        self._maze_gen_func_kwargs = maze_gen_func_kwargs
         self._maze = None
+
 
     def _observation(self, state) -> object:
         """Generates observation for given coordinate position. Useful for constructing entire observation space
@@ -101,6 +102,9 @@ class Maze(search_world.Env):
     def agent_reward(self):
         return self._reward_func(state=self._agent_position)
 
+    def info(self):
+        return self._maze_gen_func_kwargs
+    
     def step(self, action):
         """ Executes one time step within the environment. 
 
@@ -113,6 +117,7 @@ class Maze(search_world.Env):
             done (bool): True if agent has found target or environment times out, False otherwise.
             info (dict): auxiliary information
         """ 
+
         self._take_action(action)
 
         done = False
@@ -124,7 +129,13 @@ class Maze(search_world.Env):
 
         obs = self._agent_observation()
 
-        return obs, reward, done, {}
+        self._num_steps += 1
+
+        if self._num_steps >= self._max_steps:
+            done = True
+        
+        info = {'agent_position': self._agent_position}
+        return obs, reward, done, info
 
     def _transition_func(self, state, action):
         new_state = state + action
@@ -175,15 +186,19 @@ class Maze(search_world.Env):
             observation (object): observation corresponding to initial state
         """
         # creating maze and setting initial conditions
-        maze = self._maze_gen_func()
+        maze = self._maze_gen_func(**self._maze_gen_func_kwargs)
         self._maze = maze['maze']
         self._target_position = maze['target_position']
         self._inf_positions = maze['inf_positions']
-        self._agent_position = maze['agent_position']
+        self._agent_initial_position = maze['agent_initial_position']
+        self._agent_position = self._agent_initial_position
+
         # creating state and observation spaces
         self._state_space = np.vstack(np.where(self._maze == 0)).T
         self._observation_space = [self._observation(state) for state in self._state_space]        
         self._observation_model = MazeObservationModel(self._observation_space, self._state_space)
         self._transition_model = MazeTransitionModel(self._state_space, self.action_space, self._transition_func)
         self._reward_model = MazeRewardModel(self._state_space, self._reward_func)
+
+        self._num_steps = 0
         return self._agent_observation()
