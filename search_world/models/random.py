@@ -1,7 +1,9 @@
 import numpy as np
 from itertools import product
-import matplotlib.pyplot as plt
-from ast import literal_eval
+import copy
+import matplotlib as mpl
+import matplotlib.pyplot as plt 
+
 # TODO: Create agent base class with abstract methods; render, reset, __call__
 # TODO: Create class for Maze states
 # TODO: Make state space an accessible property of environment; part of wrappers
@@ -32,11 +34,16 @@ class BeliefState(object):
         state_x = [state[0] for state in self._state_space]
         state_y = [state[1] for state in self._state_space]
 
-        maze = np.zeros((np.amax(state_x) + 2, np.amax(state_y)+2))
+        maze = np.zeros((np.amax(state_x) + 2, np.amax(state_y)+2)) + -1
+
+
         for state in self._state_space:
             maze[state[0],state[1]] = self._b[str(state)]
 
-        ax.imshow(maze, vmin=0, vmax=1)
+        masked_maze = np.ma.masked_where(maze == -1, maze)
+        cmap = copy.copy(mpl.cm.get_cmap("viridis"))
+        cmap.set_bad(color='black')
+        ax.imshow(masked_maze, vmin=0, vmax=1)
     
     def update(self, obs, action):
         """Bayesian update of belief state given current observation
@@ -57,7 +64,6 @@ class BeliefState(object):
             total_prob += b_prime[str(next_state)] 
         for s, p in b_prime.items():
             b_prime[s] = p/total_prob
-
         self._b = b_prime
 
 class BeliefUpdatingRandomAgent(object):
