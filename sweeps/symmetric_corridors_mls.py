@@ -10,16 +10,12 @@ script.
 
 from python_utils.configs import sweep
 
-_CONFIG_NAME = 'configs.symmetric_corridors'
+_CONFIG_NAME = 'configs.symmetric_corridors_mls'
 
 
 def _get_param_sweep():
     """Return the sweep we want to launch."""
-    # n_corridors = [2, 3, 4, 5]
-    # lengths = [3, 5, 7, 9] 
-
-
-    n_corridors = [4]
+    n_corridors = [2, 3, 4, 5]
     lengths = [3, 5, 7, 9] 
 
     param_sweep = []

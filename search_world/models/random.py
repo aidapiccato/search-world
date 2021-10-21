@@ -95,9 +95,10 @@ class BeliefUpdatingRandomAgent(object):
         return self._action
 
 class QMDPAgent(object):
-    def __init__(self, env, horizon=15):
+    def __init__(self, env, discount_factor, horizon=15):
         self._env = env
         self._horizon = horizon
+        self._lambda = discount_factor
         self._belief_state = BeliefState(self._env)
 
     def reset(self):
@@ -128,6 +129,10 @@ class QMDPAgent(object):
             ax = plt.gca()
         self._belief_state.render(ax)
     
+
+    def info(self):
+        return {'name': 'QMDPAgent', 'horizon': self._horizon, 'lambda': self._lambda}
+
     def __call__(self, obs):
         self._belief_state.update(obs, self._action)        
         action_vals = []
@@ -171,7 +176,7 @@ class MLSAgent(object):
 
     def info(self):
         return {'name': 'MLSAgent', 'horizon': self._horizon, 'lambda': self._lambda}
-        
+
     def render(self, ax=None):
         if ax is None: 
             ax = plt.gca()
