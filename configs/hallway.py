@@ -8,7 +8,7 @@ from search_world.utils.maze_utils import hallway
 def model_config():
     config = {
         'module': 'search_world.models.random',
-        'method': 'RandomAgent'
+        'method': 'MLSAgent'
     }
     return config
 
@@ -18,7 +18,9 @@ def env_config():
         'kwargs':{
             'maze_gen_func': hallway,
             'maze_gen_func_kwargs': {
-                'length': 7
+                'length': 8,
+                'agent_initial_position': 0, 
+                'target_position': 6
             }
         }
     }
@@ -31,7 +33,7 @@ def get_config():
         'kwargs': {
             'model': model_config(),
             'env': env_config(),
-            'num_training_steps': 1000, 
+            'num_training_steps': 10, 
             'render': True
         }    
     }

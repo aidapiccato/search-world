@@ -39,8 +39,29 @@ def symmetric_corridors(length, n_corridors, target_position, agent_initial_posi
     return dict(inf_positions=inf_positions, maze=maze, target_position=target_position, agent_initial_position=agent_initial_position)
 
 
-
 def hallway(length, target_position, agent_initial_position):
+    """Generates hallway maze of given length, with target and agent located at given position
+
+    Args:
+        length (int): length of hallway
+        target_position (int): position of target
+        agent_initial_position (int): initial position of agent
+    
+    Returns:
+        dict: dictionary containing maze and initial condition information
+    """
+    maze = np.ones((3, length + 2))
+    maze[1, 1:length+1] = np.zeros((1, length))
+    states = np.argwhere(maze == 0)
+    target_position = states[target_position]
+    agent_initial_position = states[agent_initial_position]
+    inf_positions = []
+    
+    return dict(inf_positions=inf_positions, maze=maze, target_position=target_position, agent_initial_position=agent_initial_position)
+
+
+
+def leaf_hallway(length, target_position, agent_initial_position):
     """Generates maze of hallway type, consisting of long corridor with offshoot leaves. Some leaves contain informative nodes    
 
     Returns:
