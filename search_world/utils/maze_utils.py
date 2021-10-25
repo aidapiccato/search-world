@@ -33,8 +33,8 @@ def symmetric_corridors(length, n_corridors, target_position, agent_initial_posi
     # creating set of all possible start states for agents    
     states = np.argwhere(maze == 0)
     # finding agent and target position by indexing into states
-    target_position = states[target_position % len(states)]
-    agent_initial_position = states[agent_initial_position % len(states)]
+    target_position = states[target_position]
+    agent_initial_position = states[agent_initial_position]
 
     return dict(inf_positions=inf_positions, maze=maze, target_position=target_position, agent_initial_position=agent_initial_position)
 

@@ -66,14 +66,14 @@ def main(_):
     # If log_dir is not empty, create a new enumerated sub-directory in it for
     # logging.
     list_log_dir = os.listdir(log_dir)
-    if len(list_log_dir) != 0:  # For safety, explicitly use len instead of bool
-        existing_log_subdirs = [
-            int(filename) for filename in list_log_dir if filename.isdigit()]
-        if not existing_log_subdirs:
-            existing_log_subdirs = [-1]
-        new_log_subdir = str(max(existing_log_subdirs) + 1)
-        log_dir = os.path.join(log_dir, new_log_subdir)
-        os.mkdir(log_dir)
+    # if len(list_log_dir) != 0:  # For safety, explicitly use len instead of bool
+    existing_log_subdirs = [
+        int(filename) for filename in list_log_dir if filename.isdigit()]
+    if not existing_log_subdirs:
+        existing_log_subdirs = [-1]
+    new_log_subdir = str(max(existing_log_subdirs) + 1)
+    log_dir = os.path.join(log_dir, new_log_subdir)
+    os.mkdir(log_dir)
 
     logging.info('Log directory: {}'.format(log_dir))
 
