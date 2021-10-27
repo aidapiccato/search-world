@@ -13,12 +13,13 @@ import matplotlib.pyplot as plt
 import imageio
 
 class Trainer(object):
-    def __init__(self, model, model_kwargs, env, num_training_steps, render):
+    def __init__(self, model, model_kwargs, env, num_training_steps, render, save_gif=False):
         self._model = model
         self._model_kwargs = model_kwargs
         self._env = env
         self._num_training_steps = num_training_steps
         self._render = render
+        self._save_gif = save_gif
 
     def train_step():
         pass
@@ -37,7 +38,7 @@ class Trainer(object):
         step = -1
         filenames = []
 
-        if self._render:
+        if self._render and self._save_gif:
             images_dir = os.path.join(log_dir, 'images')
             os.makedirs(images_dir)
 
@@ -47,6 +48,7 @@ class Trainer(object):
 
         vector_data.append({'obs': obs, 'job_id': job_id, 'reward': reward, 'action': action, 'done': done, 'step': step, 'info': info})
         for step in range(self._num_training_steps):
+            # import pdb; pdb.set_trace()
 
             logging.info('Step: {} of {}'.format(
                 step, self._num_training_steps))
@@ -65,10 +67,13 @@ class Trainer(object):
                 fig, axs = plt.subplots(nrows=2, ncols=1)
                 self._env.render(ax=axs[0]) 
                 model.render(ax=axs[1])
-                for i in range(10):
-                    filename = os.path.join(log_dir, f'images/frame_{step}_{i}.png') 
-                    filenames.append(filename)
-                    plt.savefig(filename, dpi=96)
+                if self._save_gif:
+                    for i in range(10):
+                        filename = os.path.join(log_dir, f'images/frame_{step}_{i}.png') 
+                        filenames.append(filename)
+                        plt.savefig(filename, dpi=96)
+                else:
+                    plt.pause(0.5)
                 plt.close()
 
             if done: 
@@ -79,7 +84,7 @@ class Trainer(object):
 
         self._env.close()
 
-        if self._render:
+        if self._render and self._save_gif:
             with imageio.get_writer(os.path.join(log_dir, 'demo.gif'), mode='I') as writer:
                 for filename in filenames:
                     image = imageio.imread(filename)
@@ -87,7 +92,7 @@ class Trainer(object):
             logging.info('GIF saved')
             shutil.rmtree(os.path.join(log_dir, 'images'))
 
-        scalar_data = {'env': self._env, 'model': model}
+        scalar_data = {'env': self._env.info(), 'model': model.info()}
         logging.info('Writing data.')
         write_dir = os.path.join(log_dir, 'data')
         os.makedirs(write_dir)

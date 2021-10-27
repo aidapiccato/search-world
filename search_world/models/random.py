@@ -15,30 +15,30 @@ class BeliefState(object):
     def mls(self):
         """Returns most likely state, breaking ties randomly. 
         """
-        return self._state_space[np.random.choice(len(self._state_space), p=list(self._b.values()))]
+        return np.random.choice(len(self._state_space), p=list(self._b.values()))
 
     def __getitem__(self, state):
-        return self._b[str(state)]
+        return self._b[state]
         
     def reset(self):
         """Reset belief state to uniform distribution over state space or given initial distribution
         """
         self._observation_model = self._env._observation_model
         self._state_space = self._env._state_space
-        self._state_mapping = {str(state): state for state in self._state_space}
         self._action_space = self._env.action_space
         self._transition_model = self._env._transition_model
-        self._b = {str(state): 1/len(self._state_space) for state in self._state_space}
+        self._b = {state: 1/len(self._state_space) for state in self._state_space}
 
     def render(self, ax):
-        state_x = [state[0] for state in self._state_space]
-        state_y = [state[1] for state in self._state_space]
+
+        state_x = [self._state_space[state][0] for state in self._state_space]
+        state_y = [self._state_space[state][1] for state in self._state_space]
 
         maze = np.zeros((np.amax(state_x) + 2, np.amax(state_y)+2)) + -1
 
-
         for state in self._state_space:
-            maze[state[0],state[1]] = self._b[str(state)]
+            state_coor = self._state_space[state]
+            maze[state_coor[0],state_coor[1]] = self._b[state]
 
         masked_maze = np.ma.masked_where(maze == -1, maze)
         cmap = copy.copy(mpl.cm.get_cmap("viridis"))
@@ -52,16 +52,18 @@ class BeliefState(object):
             obs (object): observation emitted by environment
             action (object): action performed by agent
         """
+
         b_prime = {}
 
         total_prob = 0 
+
         for next_state in self._state_space:
-            p_obs = self._observation_model(observation=obs, state=next_state)
+            p_obs = self._observation_model.prob(observation=obs, state=next_state)
             p_next_state = 0
             for state in self._state_space:
-                p_next_state += self._b[str(state)] * self._transition_model(next_state=next_state, state=state, action=action)            
-            b_prime.update({str(next_state): p_obs * p_next_state})
-            total_prob += b_prime[str(next_state)] 
+                p_next_state += self._b[state] * self._transition_model.prob(next_state=next_state, state=state, action=action)            
+            b_prime.update({next_state: p_obs * p_next_state})
+            total_prob += b_prime[next_state] 
         for s, p in b_prime.items():
             b_prime[s] = p/total_prob
         self._b = b_prime
@@ -104,24 +106,24 @@ class QMDPAgent(object):
     def reset(self):
         self._belief_state.reset()
         self._state_space = self._env._state_space     
-        self._transition_func = self._env._transition_func
-        self._action_space = self._env.action_space
+        self._transition_model = self._env._transition_model
+        self._action_space = self._env._action_space
         self._reward_model = self._env._reward_model
-        self._action = [0, 0]
+        self._action = None
         self._lambda = 0.8
         self._Q = self._q_func()
         
     def _q_func(self):
         """Returns Q function over states
         """
-        Q = {str(state): {str(action): 0 for action in self._action_space} for state in self._state_space}
+        Q = {state: {action: 0 for action in self._action_space} for state in self._state_space}
         for _ in range(self._horizon):
             for state in self._state_space:
                 for action in self._action_space:
-                    state_prime = self._transition_func(state=state, action=action)
+                    state_prime = self._transition_model(state=state, action=action)
                     r = self._reward_model(state_prime)
-                    max_q_a = np.amax([Q[str(state_prime)][str(action)] for action in self._action_space])
-                    Q[str(state)][str(action)] = r + self._lambda * max_q_a
+                    max_q_a = np.amax([Q[state_prime][action] for action in self._action_space])
+                    Q[state][action] = r + self._lambda * max_q_a
         return Q
 
     def render(self, ax=None):
@@ -139,9 +141,9 @@ class QMDPAgent(object):
         for action in self._action_space:
             w_q_val = 0
             for state in self._state_space:
-                w_q_val += self._belief_state[state] * self._Q[str(state)][str(action)]
+                w_q_val += self._belief_state[state] * self._Q[state][action]
             action_vals.append(w_q_val)
-        self._action = self._action_space[np.random.choice(np.argwhere(action_vals == np.amax(action_vals)).flatten().tolist())]
+        self._action = np.random.choice(np.argwhere(action_vals == np.amax(action_vals)).flatten().tolist())
         return self._action
 
 
@@ -155,23 +157,24 @@ class MLSAgent(object):
     def reset(self):
         self._belief_state.reset()
         self._state_space = self._env._state_space     
-        self._transition_func = self._env._transition_func
-        self._action_space = self._env.action_space
+        self._transition_model = self._env._transition_model
+        self._action_space = self._env._action_space
         self._reward_model = self._env._reward_model
-        self._action = [0, 0]
+        self._action = None
         self._Q = self._q_func()
         
     def _q_func(self):
         """Returns Q function over states
         """
-        Q = {str(state): {str(action): 0 for action in self._action_space} for state in self._state_space}
+        
+        Q = {state: {action: 0 for action in self._action_space} for state in self._state_space}
         for _ in range(self._horizon):
             for state in self._state_space:
                 for action in self._action_space:
-                    state_prime = self._transition_func(state=state, action=action)
+                    state_prime = self._transition_model(state=state, action=action)
                     r = self._reward_model(state_prime)
-                    max_q_a = np.amax([Q[str(state_prime)][str(action)] for action in self._action_space])
-                    Q[str(state)][str(action)] = r + self._lambda * max_q_a
+                    max_q_a = np.amax([Q[state_prime][action] for action in self._action_space])
+                    Q[state][action] = r + self._lambda * max_q_a
         return Q
 
     def info(self):
@@ -185,8 +188,8 @@ class MLSAgent(object):
     def __call__(self, obs):
         self._belief_state.update(obs, self._action)
         self._mls = self._belief_state.mls()
-        q_vals = np.asarray([self._Q[str(self._mls)][str(action)] for action in self._action_space])
-        self._action = self._action_space[np.random.choice(np.argwhere(q_vals == np.amax(q_vals)).flatten().tolist())]
+        q_vals = np.asarray([self._Q[self._mls][action] for action in self._action_space])
+        self._action = np.random.choice(np.argwhere(q_vals == np.amax(q_vals)).flatten().tolist())
         return self._action
 
 class MLSLookupDistanceAgent(object):
