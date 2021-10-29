@@ -1,5 +1,4 @@
-from pdb import set_trace
-import pdb
+import io
 import search_world
 import numpy as np
 import matplotlib.pyplot as plt
@@ -39,6 +38,9 @@ class MazeObservationSpace(object):
         self._n_observations = len(self._observations)
         self._observation_space = np.arange(self._n_observations)
 
+    def __len__(self):
+        return len(self._observation_space)
+
     def __getitem__(self, index):
         return self._observations[index]
 
@@ -70,6 +72,16 @@ class MazeObservationModel(object):
     def __call__(self, state):
         return self._observation_func[state]
 
+    def generate_solver_input(self):
+        output = io.StringIO()
+        output.write("O: *\n")
+        for state in self._state_space:
+            probs = [str(float(self._histogram[state][observation])) for observation in self._observation_space] 
+            output.write(" ".join(probs))
+            output.write('\n')
+        string = output.getvalue()
+        output.close()
+        return string
 
 class MazeRewardModel(object):
     """Grid world reward model"""
@@ -79,6 +91,14 @@ class MazeRewardModel(object):
 
     def __call__(self, state):
         return self._reward_map[state]
+
+    def generate_solver_input(self):
+        output = io.StringIO()
+        for end_state in self._state_space:
+            output.write("R: * : * : {} : * {}\n".format(end_state, self._reward_map[end_state]))
+        string = output.getvalue()
+        output.close()
+        return string
 
 class MazeTransitionModel(object):
     """Grid world transition model
@@ -100,6 +120,18 @@ class MazeTransitionModel(object):
             return next_state == state
         return self._histogram[state][action][next_state]
     
+    def generate_solver_input(self):
+        output = io.StringIO()
+        for action in self._action_space:
+            output.write("T: {}\n".format(int(action)))            
+            for state in self._state_space:
+                probs = [str(float(self._histogram[state][action][next_state])) for next_state in self._state_space] 
+                output.write(" ".join(probs))
+                output.write('\n')
+        string = output.getvalue()
+        output.close()
+        return string
+
 class MazeActionSpace(search_world.Space):
     """A grid world action space with 4 movements
     """
@@ -107,7 +139,8 @@ class MazeActionSpace(search_world.Space):
         self._actions = [[0, 1], [1, 0], [0, -1], [-1, 0], [0, 0]]
         self._action_map = {str(action_val): i for (i, action_val) in enumerate(self._actions)}
         self._action_space = np.arange(len(self._actions))
-
+    def __len__(self):
+        return len(self._action_space)
     def sample(self):
         return np.random.choice(self._action_space)
     
@@ -123,17 +156,7 @@ class MazeActionSpace(search_world.Space):
         return iter(self._action_space)
 
     def contains(self, a):
-        """Returns true if action performed by agent is contained in grid space.
-
-        Args:
-            a (object): Action performed by agent
-
-        Returns:
-            bool: True if agent action is valid, false otherwise
-        """
         return a in self._action_space
-        # a = np.asarray(a)
-        # return (-1 <= a).all() and (a <= 1).all() and len(np.flatnonzero(np.abs(a) > 0)) == 1
 
 class Maze(search_world.Env):
     def __init__(self, maze_gen_func, maze_gen_func_kwargs, max_steps) -> None:
@@ -224,7 +247,23 @@ class Maze(search_world.Env):
         else:
             raise ValueError("Agent action not in Maze environment action space")
 
-    
+    def _generate_solver_input(self):
+        output = io.StringIO()
+        # writing preamble
+        output.write('discount: {}\n'.format(0.9))
+        output.write('values: reward\n')
+        output.write('states: {}\n'.format(len(self._state_space)))
+        output.write('actions: {}\n'.format(len(self._action_space)))
+        output.write('observations: {}\n'.format(len(self._observation_space)))
+        start_state = [str(1.0) if state == self._agent_initial_state else str(0.0) for state in self._state_space]
+        start_state = " ".join(start_state)
+        output.write('start: {}\n'.format(start_state))
+        output.write(self._observation_model.generate_solver_input())
+        output.write(self._transition_model.generate_solver_input())
+        output.write(self._reward_model.generate_solver_input())
+        text = output.getvalue()
+        return text
+
     def render(self, ax=None, mode="human"):
         agent_position = self._state_space[self._agent_state]
         target_position = self._state_space[self._target_state]
@@ -266,6 +305,8 @@ class Maze(search_world.Env):
             # is_inf = np.any(np.all(np.isin(self._inf_positions, coor, True), axis=1))
             is_target = np.all(coor == self._target_position)
             return adjacent_nodes + (is_target, )
+
+       
 
         def _observation_func_prob(coor, obs):
             true_obs = _observation_func(coor)
@@ -311,5 +352,8 @@ class Maze(search_world.Env):
         self._min_dist = find_shortest_path(self._maze, self._target_position, self._agent_initial_position)
         self._max_dist = find_longest_path(self._maze, self._target_position, self._agent_initial_position)
         self._num_steps = 0
+
+        self._solver_input = self._generate_solver_input()
+        print(self._solver_input)
 
         return self.step(None)
