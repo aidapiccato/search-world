@@ -27,7 +27,7 @@ def env_config():
             'max_steps': 100,
             'maze_gen_func': hallway,
             'maze_gen_func_kwargs': {
-                'length': 4,
+                'length': 5,
                 'agent_initial_position': 0, 
                 'target_position': 3
             }
