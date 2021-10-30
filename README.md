@@ -15,4 +15,4 @@ In the search-world directory are also trainer.py, which generates a general mod
 
 ## Running on openmind
 
-`bash openmind_launch.sh sweeps/symmetric_corridors.py`
+`bash openmind_launch.sh sweeps/symm_corr.py`

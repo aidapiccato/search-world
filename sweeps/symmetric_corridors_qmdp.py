@@ -10,7 +10,7 @@ script.
 
 from python_utils.configs import sweep
 
-_CONFIG_NAME = 'configs.symmetric_corridors_qmdp'
+_CONFIG_NAME = 'configs.symm_corr_qmdp'
 
 
 def _get_param_sweep():

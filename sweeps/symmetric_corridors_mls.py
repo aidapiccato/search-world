@@ -10,7 +10,7 @@ script.
 
 from python_utils.configs import sweep
 
-_CONFIG_NAME = 'configs.symmetric_corridors_mls'
+_CONFIG_NAME = 'configs.symm_corr_mls'
 
 
 def _get_param_sweep():
