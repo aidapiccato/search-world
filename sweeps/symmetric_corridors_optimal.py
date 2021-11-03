@@ -10,18 +10,15 @@ script.
 
 from python_utils.configs import sweep
 
-_CONFIG_NAME = 'configs.symm_corr_qmdp'
+_CONFIG_NAME = 'configs.symmetric_corridors_optimal'
 
 
 def _get_param_sweep():
     """Return the sweep we want to launch."""
     # n_corridors = [2, 3, 4, 5]
     # lengths = [3, 5, 7, 9] 
-
-    lengths = [5]    
-    n_corridors = [5]
-    # lengths = [3, 5, 7, 9] 
-
+    lengths = [9]
+    n_corridors = [3]
 
     param_sweep = []
     for c in n_corridors:
@@ -49,7 +46,7 @@ def main():
 
     param_sweep = sweep.product(
         param_sweep,
-        sweep.discrete(('kwargs', 'model', 'method'), ['QMDPAgent']),
+        sweep.discrete(('kwargs', 'model', 'method'), ['OptimalAgent']),
     )
     
     param_sweep = sweep.add_log_dir_sweep(param_sweep)

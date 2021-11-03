@@ -1,14 +1,14 @@
 """File for generating input to and reading from pomdp-solver 
 """
-import io
 import time
+import io
 import numpy as np
 import os 
 import subprocess
 import glob
-import shutil
 
-PATH_TO_POMDP_SOLVER = '/Users/aidapiccato/pomdp-solve-5.4/src/pomdp-solve'
+# PATH_TO_POMDP_SOLVER = '/Users/aidapiccato/pomdp-solve-5.4/src/pomdp-solve'
+PATH_TO_POMDP_SOLVER = '/om/user/apiccato/lib/pomdp-solve-5.4/src/pomdp-solve'
 def run(solver_input, name ):
     """Reads in alpha vectors and finite state controller for POMDP specified in solver-input
 
@@ -20,9 +20,10 @@ def run(solver_input, name ):
     if len(name) > 47:
         # really weird limit on the length of the .pomdp file name (????)
         name = name[-47:]
+    output_file_path = os.path.join(os.getcwd(), temp_directory, name)
     input_file_path = os.path.join(os.getcwd(), temp_directory, '{}.pomdp'.format(name))
-    pg_path = glob.glob(os.path.join(os.getcwd(), temp_directory, '{}-*.pg'.format(name)))
-    alpha_path = glob.glob(os.path.join(os.getcwd(), temp_directory, '{}-*.alpha'.format(name)))
+    pg_path = glob.glob(os.path.join(os.getcwd(), temp_directory, '{}.pg'.format(name)))
+    alpha_path = glob.glob(os.path.join(os.getcwd(), temp_directory, '{}.alpha'.format(name)))
 
     if len(alpha_path) == 0:
         if not os.path.exists(temp_directory):
@@ -32,12 +33,12 @@ def run(solver_input, name ):
             f.close() 
         # import pdb; pdb.set_trace()
         # run program in temporary directory
-        command = "{} -pomdp {}".format(PATH_TO_POMDP_SOLVER, input_file_path)
+        command = "{} -pomdp {} -o {}".format(PATH_TO_POMDP_SOLVER, input_file_path, output_file_path)
         print(command.split(" "))
-        subprocess.run(command.split(" ")) 
+        subprocess.run(command.split(" "))  
         # read in alpha vectors and policy graph
-        pg_path = glob.glob(os.path.join(os.getcwd(), temp_directory, '{}-*.pg'.format(name)))[0]
-        alpha_path = glob.glob(os.path.join(os.getcwd(), temp_directory,  '{}-*.alpha'.format(name)))[0]
+        pg_path = glob.glob(os.path.join(os.getcwd(), temp_directory, '{}.pg'.format(name)))[0]
+        alpha_path = glob.glob(os.path.join(os.getcwd(), temp_directory,  '{}.alpha'.format(name)))[0]
     else:
         pg_path = pg_path[0]
         alpha_path = alpha_path[0]

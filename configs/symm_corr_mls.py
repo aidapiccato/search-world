@@ -30,7 +30,7 @@ def env_config():
                 'length': 5, 
                 'n_corr': 4,
                 'target_pos': 3,
-                'agent_initial_pos': 1,                
+                'agent_init_pos': 1,                
             }
         }
     }
