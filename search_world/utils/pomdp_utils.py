@@ -1,6 +1,5 @@
 """File for generating input to and reading from pomdp-solver 
 """
-import time
 import io
 import numpy as np
 import os 
