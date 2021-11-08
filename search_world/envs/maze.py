@@ -124,7 +124,7 @@ class MazeTransitionModel(object):
         output = io.StringIO()
         for action in self._action_space:
             output.write("T: {}\n".format(int(action)))            
-            for state in self._state_space:
+            for state in self._state_space:                
                 probs = [str(float(self._histogram[state][action][next_state])) for next_state in self._state_space] 
                 output.write(" ".join(probs))
                 output.write('\n')
@@ -255,7 +255,7 @@ class Maze(search_world.Env):
         output.write('states: {}\n'.format(len(self._state_space)))
         output.write('actions: {}\n'.format(len(self._action_space)))
         output.write('observations: {}\n'.format(len(self._observation_space)))
-        start_state = [str(1.0) if state == self._agent_initial_state else str(0.0) for state in self._state_space]
+        start_state = [str(1/len(self._state_space)) for _ in self._state_space] # uniform starting belief state
         start_state = " ".join(start_state)
         output.write('start: {}\n'.format(start_state))
         output.write(self._observation_model.generate_solver_input())
