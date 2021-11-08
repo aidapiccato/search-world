@@ -3,6 +3,7 @@ import search_world
 import numpy as np
 import matplotlib.pyplot as plt
 from search_world.utils.maze_utils import find_shortest_path, find_longest_path
+from search_world.utils.pomdp_utils import run
 
 class MazeStateSpace(object):
     def __init__(self, maze) -> None:
@@ -195,6 +196,14 @@ class Maze(search_world.Env):
     def agent_reward(self):
         return self._reward_model(state=self._agent_state)
 
+    def name(self):
+        id_vals = []
+        for k in self._maze_gen_func_kwargs.keys(): 
+            id_vals.append(str(k))
+            id_vals.append(str(self._maze_gen_func_kwargs[k]))
+        id_vals = "".join(id_vals)
+        return '{}{}'.format(self._maze_gen_func.__name__, id_vals)
+
     def info(self):
         info =  self._maze_gen_func_kwargs
         info.update({'agent_initial_state': self._agent_initial_state, 
@@ -255,7 +264,11 @@ class Maze(search_world.Env):
         output.write('states: {}\n'.format(len(self._state_space)))
         output.write('actions: {}\n'.format(len(self._action_space)))
         output.write('observations: {}\n'.format(len(self._observation_space)))
+<<<<<<< HEAD
         start_state = [str(1/len(self._state_space)) for _ in self._state_space] # uniform starting belief state
+=======
+        start_state = [str(1/len(self._state_space))] * len(self._state_space)
+>>>>>>> d043797c139ebe39b7f6934d9d904159501289e0
         start_state = " ".join(start_state)
         output.write('start: {}\n'.format(start_state))
         output.write(self._observation_model.generate_solver_input())
@@ -288,9 +301,9 @@ class Maze(search_world.Env):
         # creating maze and setting initial conditions
         maze = self._maze_gen_func(**self._maze_gen_func_kwargs)
         self._maze = maze['maze']
-        self._target_position = maze['target_position']        
+        self._target_position = maze['target_pos']        
         self._inf_positions = maze['inf_positions']
-        self._agent_initial_position = maze['agent_initial_position']
+        self._agent_init_pos = maze['agent_init_pos']
 
         
         def _observation_func(coor) -> object:
@@ -345,15 +358,12 @@ class Maze(search_world.Env):
         self._transition_model = MazeTransitionModel(state_space=self._state_space, action_space=self._action_space, transition_func_prob=_transition_func_prob, transition_func=_transition_func)
 
         self._target_state = self._state_space(self._target_position)
-        self._agent_initial_state = self._state_space(self._agent_initial_position)
+        self._agent_initial_state = self._state_space(self._agent_init_pos)
         self._agent_state = self._agent_initial_state
 
         self._reward_model = MazeRewardModel(state_space=self._state_space, reward_func=_reward_func)
-        self._min_dist = find_shortest_path(self._maze, self._target_position, self._agent_initial_position)
-        self._max_dist = find_longest_path(self._maze, self._target_position, self._agent_initial_position)
+        self._min_dist = find_shortest_path(self._maze, self._target_position, self._agent_init_pos)
+        self._max_dist = find_longest_path(self._maze, self._target_position, self._agent_init_pos)
         self._num_steps = 0
-
-        self._solver_input = self._generate_solver_input()
-        print(self._solver_input)
 
         return self.step(None)

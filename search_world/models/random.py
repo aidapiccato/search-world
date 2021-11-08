@@ -3,7 +3,7 @@ from itertools import product
 import copy
 import matplotlib as mpl
 import matplotlib.pyplot as plt 
-
+from search_world.utils.pomdp_utils import run
 # TODO: Create agent base class with abstract methods; render, reset, __call__
 # TODO: Create class for Maze states
 # TODO: Make state space an accessible property of environment; part of wrappers
@@ -145,6 +145,46 @@ class QMDPAgent(object):
             action_vals.append(w_q_val)
         self._action = np.random.choice(np.argwhere(action_vals == np.amax(action_vals)).flatten().tolist())
         return self._action
+
+class OptimalAgent(object):
+    def __init__(self, env, horizon, discount_factor) -> None:        
+        super().__init__()
+        self._env = env        
+        self._horizon = horizon
+        self._lambda = discount_factor
+        self._belief_state = BeliefState(self._env)
+
+    
+    def reset(self):
+        self._belief_state.reset()
+        self._solver_input = self._env._generate_solver_input()
+        self._state_space = self._env._state_space     
+        self._transition_model = self._env._transition_model
+        self._action_space = self._env._action_space
+        self._reward_model = self._env._reward_model
+        solver_dict = run(self._solver_input, self._env.name())
+        self._alphas = solver_dict['alphas']
+        self._transitions = solver_dict['transitions']
+        self._actions = solver_dict['actions']
+        self._curr_node = None
+        self._action = None
+    
+    def render(self, ax=None):
+        if ax is None: 
+            ax = plt.gca()
+        self._belief_state.render(ax)
+    
+    def __call__(self, obs): 
+        if self._curr_node == None:
+            self._belief_state.update(obs, None)
+            b_0 = np.array(list(self._belief_state._b.values()))
+            self._curr_node = np.argmax(np.sum(b_0 * self._alphas, 1)) # current belief node
+        else:
+            self._curr_node = self._transitions[self._curr_node][obs]
+        return self._actions[self._curr_node] 
+
+    def info(self):
+        return {'name': 'OptimalAgent', 'horizon': self._horizon, 'lambda': self._lambda}
 
 
 class MLSAgent(object):

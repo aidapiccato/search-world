@@ -1,35 +1,36 @@
-"""Configurations to train a model on Hallway task. 
+"""Configurations to train a model on Symmetric Corridors task. 
 
 """
 
 from search_world.trainer import Trainer
 from search_world.envs.maze import Maze
-from search_world.utils.maze_utils import hallway
+from search_world.utils.maze_utils import symm_corr
 
 def model_config():
     config = {
         'module': 'search_world.models.random',
-        'method': 'OptimalAgent'
+        'method': 'OptimalAgent',
     }
     return config
 
 def model_kwargs_config():
     config = {
-        'horizon': 10,
-        'discount_factor': 1
+        'horizon': 5,
+        'discount_factor': 0.9
     }
     return config
-
+    
 def env_config():
     config = {
         'constructor': Maze,
         'kwargs':{
             'max_steps': 100,
-            'maze_gen_func': hallway,
+            'maze_gen_func': symm_corr,
             'maze_gen_func_kwargs': {
-                'length': 5,
-                'agent_initial_position': 0, 
-                'target_position': 3
+                'length': 9, 
+                'n_corr': 4,
+                'target_pos': 3,
+                'agent_init_pos': 1,                
             }
         }
     }
@@ -43,9 +44,8 @@ def get_config():
             'model': model_config(),
             'model_kwargs': model_kwargs_config(),
             'env': env_config(),
-            'num_training_steps': 10, 
-            'render': True,
-            'save_gif': False
+            'num_training_steps': 200, 
+            'render': True
         }    
     }
     return config

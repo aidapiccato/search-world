@@ -4,12 +4,12 @@
 
 from search_world.trainer import Trainer
 from search_world.envs.maze import Maze
-from search_world.utils.maze_utils import symmetric_corridors
+from search_world.utils.maze_utils import symm_corr
 
 def model_config():
     config = {
         'module': 'search_world.models.random',
-        'method': 'QMDPAgent',
+        'method': 'OptimalAgent',
     }
     return config
 
@@ -25,12 +25,12 @@ def env_config():
         'constructor': Maze,
         'kwargs':{
             'max_steps': 100,
-            'maze_gen_func': symmetric_corridors,
+            'maze_gen_func': symm_corr,
             'maze_gen_func_kwargs': {
-                'length': 5, 
-                'n_corridors': 4,
-                'target_position': 9,
-                'agent_initial_position': 9,                
+                'length': 9, 
+                'n_corr': 4,
+                'target_pos': 3,
+                'agent_init_pos': 1,                
             }
         }
     }

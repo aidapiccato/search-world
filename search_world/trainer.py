@@ -26,8 +26,7 @@ class Trainer(object):
 
     def __call__(self, log_dir):
         obs, reward, done, info = self._env.reset()
-        
-        job_id = log_dir.rsplit('/', 1)[-1]
+         
         model = self._model(self._env, **self._model_kwargs) 
         model.reset()
         action = [0, 0]
@@ -46,7 +45,7 @@ class Trainer(object):
             # if done is true on the first timestep, don't run!
             return
 
-        vector_data.append({'obs': obs, 'job_id': job_id, 'reward': reward, 'action': action, 'done': done, 'step': step, 'info': info})
+        vector_data.append({'obs': obs, 'reward': reward, 'action': action, 'done': done, 'step': step, 'info': info})
         for step in range(self._num_training_steps):
             # import pdb; pdb.set_trace()
 
