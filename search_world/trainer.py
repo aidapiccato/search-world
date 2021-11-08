@@ -60,7 +60,7 @@ class Trainer(object):
             logging.info('action={}, obs={}, reward={}, done={}, info={}'.format(action, obs, reward, done, info))            
 
             # savig vectorized data
-            vector_data.append({'obs': obs, 'job_id': job_id, 'reward': reward, 'action': action, 'done': done, 'step': step, 'info': info})
+            vector_data.append({'obs': obs, 'reward': reward, 'action': action, 'done': done, 'step': step, 'info': info})
 
             if self._render and step % plot_every == 0:
                 fig, axs = plt.subplots(nrows=2, ncols=1)
@@ -79,7 +79,7 @@ class Trainer(object):
                 obs, reward, done, info = self._env.reset() 
                 model.reset()
                 action = [0, 0]
-                vector_data.append({'obs': obs, 'job_id': job_id, 'reward': reward, 'action': action, 'done': done, 'step': step, 'info': info})
+                vector_data.append({'obs': obs, 'reward': reward, 'action': action, 'done': done, 'step': step, 'info': info})
 
         self._env.close()
 
