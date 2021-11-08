@@ -31,7 +31,7 @@ from moog_demos import human_agent
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string('config',
-                    'moog_demos.example_configs.pong',
+                    'moog_configs.symm_corr',
                     'Filename of task config to use.')
 flags.DEFINE_integer('level', 0, 'Level of task config to run.')
 flags.DEFINE_integer('render_size_width', 700,

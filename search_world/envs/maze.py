@@ -264,11 +264,7 @@ class Maze(search_world.Env):
         output.write('states: {}\n'.format(len(self._state_space)))
         output.write('actions: {}\n'.format(len(self._action_space)))
         output.write('observations: {}\n'.format(len(self._observation_space)))
-<<<<<<< HEAD
-        start_state = [str(1/len(self._state_space)) for _ in self._state_space] # uniform starting belief state
-=======
         start_state = [str(1/len(self._state_space))] * len(self._state_space)
->>>>>>> d043797c139ebe39b7f6934d9d904159501289e0
         start_state = " ".join(start_state)
         output.write('start: {}\n'.format(start_state))
         output.write(self._observation_model.generate_solver_input())
