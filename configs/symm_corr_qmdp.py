@@ -27,10 +27,7 @@ def env_config():
             'max_steps': 100,
             'maze_gen_func': symm_corr,
             'maze_gen_func_kwargs': {
-                'length': 5, 
-                'n_corr': 4,
-                'target_pos': 3,
-                'agent_init_pos': 1,                 
+               {'length': 5,  'n_corr': 3, 'target_pos': 4, 'agent_init_pos': 6}           
             }
         }
     }

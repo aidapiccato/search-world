@@ -137,7 +137,8 @@ class MazeActionSpace(search_world.Space):
     """A grid world action space with 4 movements
     """
     def __init__(self):
-        self._actions = [[0, 1], [1, 0], [0, -1], [-1, 0], [0, 0]]
+
+        self._actions = [[0, -1], [0, 1] , [0, -1], [1, 0], [0, 0]]
         self._action_map = {str(action_val): i for (i, action_val) in enumerate(self._actions)}
         self._action_space = np.arange(len(self._actions))
     def __len__(self):
@@ -206,8 +207,8 @@ class Maze(search_world.Env):
 
     def info(self):
         info =  self._maze_gen_func_kwargs
-        info.update({'agent_initial_state': self._agent_initial_state, 
-            'target_state': self._target_state, 'maze': self._maze})
+        info.update({'agent_init_pos': self._agent_initial_state, 
+            'target_pos': self._target_state, 'maze': self._maze, 'max_steps': self._max_steps})
         return info
     
     def step(self, action):
@@ -222,7 +223,6 @@ class Maze(search_world.Env):
             done (bool): True if agent has found target or environment times out, False otherwise.
             info (dict): auxiliary information
         """ 
-
         self._take_action(action)
 
         done = False
@@ -250,7 +250,6 @@ class Maze(search_world.Env):
         Args:
             action (object): action performed by agent.
         """
-        # import pdb; pdb.set_trace()
         if action is None or action in self._action_space:
             self._agent_state = self._transition_model(state=self._agent_state, action=action)
         else:
@@ -278,7 +277,7 @@ class Maze(search_world.Env):
         target_position = self._state_space[self._target_state]
         if ax is None:
             ax = plt.gca()
-        ax.imshow(self._maze, cmap='gray')
+        ax.imshow(self._maze, cmap='gray', origin='lower')
         target = plt.Circle((target_position[1], target_position[0]), radius=0.5, color='yellow')
         ax.add_artist(target)
         agent = plt.Circle((agent_position[1], agent_position[0]), radius=0.5)        
@@ -331,7 +330,7 @@ class Maze(search_world.Env):
                 return self._maze[coor[0], coor[1]] != 1
             return False
 
-        def _transition_func(coor, action):             
+        def _transition_func(coor, action):
             if action is None:
                 return coor
             new_coor = coor + action
