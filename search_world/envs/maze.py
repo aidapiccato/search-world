@@ -201,6 +201,9 @@ class Maze(search_world.Env):
 
     def name(self):
         id_vals = []
+        for k in self._init_state.keys():
+            id_vals.append(str(k))
+            id_vals.append(str(self._init_state[k]))
         for k in self._maze_gen_func_kwargs.keys(): 
             id_vals.append(str(k))
             id_vals.append(str(self._maze_gen_func_kwargs[k]))

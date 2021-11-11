@@ -18,8 +18,8 @@ def _get_param_sweep():
     # n_corridors = [2, 3, 4, 5]
     # lengths = [3, 5, 7, 9] 
 
-    n_corridors = [2]
-    lengths = [3, 5, 7, 9]
+    n_corridors = [4]
+    lengths = [5, 9]
 
     param_sweep = []
     for c in n_corridors:
