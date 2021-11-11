@@ -26,7 +26,7 @@ _N_TIMESTEPS = 6
 _Y_VERTEX_MIN = 0.25
 _X_VERTEX_MIN = 0 
 _DISPLAY_SIZE = 0.5
-_EPSILON = 1e-45
+
 
 def _get_config(maze_size_fun, occluder_rad_fun, occluder_opacity_fun, y_vertex_min_fun):
     """Get environment config."""
@@ -52,26 +52,26 @@ def _get_config(maze_size_fun, occluder_rad_fun, occluder_opacity_fun, y_vertex_
         # maze_size = maze_size_fun()
         occluder_rad = occluder_rad_fun()
         y_vertex_min = y_vertex_min_fun()
-        occluder_opacity = occluder_opacity_fun()
-        ambient_size = 11
+        occluder_opacity = occluder_opacity_fun() 
         # Creating base search maze         
-        orig_maze_array, maze_array, maze_obj, agent_init_pos, prey_pos = moog_generator(ambient_size)
-        maze_size = maze_obj._maze.shape[0]
-        ambient_size = maze_size + 5
+        ambient_padding=5
+        orig_maze_array, maze_array, maze_obj, agent_init_pos, prey_pos = moog_generator(ambient_padding=ambient_padding)
+        maze_size = orig_maze_array.shape
+        ambient_size = maze_array.shape
 
 
-        translation_x = np.random.randint(low=1, high=ambient_size-(maze_size + 1)-1)
-        translation_y = np.random.randint(low=1, high=ambient_size-(maze_size + 1)-1)
+        translation_x = np.random.randint(low=1, high=ambient_size[0]-(maze_size[0] + 1)-1)
+        translation_y = np.random.randint(low=1, high=ambient_size[1]-(maze_size[1] + 1)-1) 
 
         # Translating maze to produce search maze        
         search_maze_array = np.roll(maze_array, shift=translation_x, axis=0)
         search_maze_array = np.roll(search_maze_array, shift=translation_y, axis=1)
         
-        search_maze = maze_lib.Maze(np.flip(search_maze_array, axis=0), y_vertex_min=y_vertex_min, x_vertex_min=_X_VERTEX_MIN, grid_size=_DISPLAY_SIZE)
+        search_maze = maze_lib.Maze(search_maze_array, y_vertex_min=y_vertex_min, x_vertex_min=_X_VERTEX_MIN, grid_size=_DISPLAY_SIZE)
         search_walls = search_maze.to_sprites(c0=0., c1=0., c2=0.4)
         
          # Creating reference maze
-        ref_maze = maze_lib.Maze(np.flip(maze_array, axis=0), y_vertex_min=_Y_VERTEX_MIN, x_vertex_min=_X_VERTEX_MIN + 0.5, grid_size=_DISPLAY_SIZE)
+        ref_maze = maze_lib.Maze(maze_array, y_vertex_min=_Y_VERTEX_MIN, x_vertex_min=_X_VERTEX_MIN + 0.5, grid_size=_DISPLAY_SIZE)
         ref_walls = ref_maze.to_sprites(c0=0., c1=0., c2=0.4) 
 
         # Creating display walls to split the reference and search maze
@@ -79,14 +79,11 @@ def _get_config(maze_size_fun, occluder_rad_fun, occluder_opacity_fun, y_vertex_
             [[0.5 - _WALL_THICKNESS / 2, 1], [0.5 + _WALL_THICKNESS / 2, 1], 
             [0.5 + _WALL_THICKNESS / 2, 0], [0.5 - _WALL_THICKNESS / 2, 0]]), x=0, y=0, c0=0., c1=0., c2=0.5)]
 
-        # Sample positions in maze grid for the agent
-        search_maze_offset = [y_vertex_min, _X_VERTEX_MIN]
-        # points = search_maze.sample_distinct_open_points(1)
-        # positions = [search_maze_offset + search_maze.grid_side * (np.array(x) + 0.5) for x in points]
+
+        search_maze_offset = [y_vertex_min, _X_VERTEX_MIN] 
 
         # Agents
-
-        agent_position = search_maze.grid_side * (np.array(agent_init_pos+  [-translation_x, translation_y]) + 0.5) + search_maze_offset  
+        agent_position = search_maze.grid_side * (np.array(agent_init_pos +  [translation_x, translation_y]) + 0.5) + search_maze_offset  
         agent = [sprite.Sprite(
             x=agent_position[1], y=agent_position[0], metadata={'env': maze_obj.info()}, **agent_factors)]
 
@@ -102,16 +99,13 @@ def _get_config(maze_size_fun, occluder_rad_fun, occluder_opacity_fun, y_vertex_
         ref_prey = []
         ref_maze_offset = [_Y_VERTEX_MIN, _X_VERTEX_MIN]
 
-        print(np.vstack(np.where(np.flip(orig_maze_array) == 0)).T[maze_obj._target_state])
-        print(maze_obj._state_space[maze_obj._target_state])
-        print(prey_pos)
         ref_prey_pos = ref_maze_offset + ref_maze.grid_side * (np.array(prey_pos) + 0.5)
         ref_prey.append(sprite.Sprite(x=ref_prey_pos[1]+0.5, y=ref_prey_pos[0], **prey_factors))
 
         # Place prey at a single location in maze
         prey = []
 
-        target_prey_pos = search_maze_offset + search_maze.grid_side * (np.array(prey_pos + [-translation_x, translation_y])  + 0.5)
+        target_prey_pos = search_maze_offset + search_maze.grid_side * (np.array(prey_pos + [translation_x, translation_y])  + 0.5)
         prey.append(sprite.Sprite(x=target_prey_pos[1], y=target_prey_pos[0], opacity=255, **prey_factors))
             
 
@@ -136,7 +130,7 @@ def _get_config(maze_size_fun, occluder_rad_fun, occluder_opacity_fun, y_vertex_
 
     maze_physics = physics_lib.MazePhysics(
         maze_layer='walls',
-        avatar_layers=('agent', 'prey', 'ghosts', 'occluder'),
+        avatar_layers=('agent', 'prey', 'occluder'),
     )
 
     physics = physics_lib.Physics(
@@ -148,27 +142,18 @@ def _get_config(maze_size_fun, occluder_rad_fun, occluder_opacity_fun, y_vertex_
     # Task
     ############################################################################
 
-    ghost_task = tasks.ContactReward(
-        -5, layers_0='agent', layers_1='ghosts', reset_steps_after_contact=0)
+ 
     prey_task = tasks.ContactReward(1, layers_0='agent', layers_1='prey')
     reset_task = tasks.Reset(
         condition=lambda state: len(state['prey']) == 0,
         steps_after_condition=5,
     )
-    task = tasks.CompositeTask(
-        ghost_task, prey_task, reset_task, timeout_steps=1000)
+    task = tasks.CompositeTask(prey_task, reset_task, timeout_steps=1000)
 
     ############################################################################
     # Action space
     ############################################################################
-
-    # action_space = action_spaces.Grid(
-    #     scaling_factor=0.015,
-    #     action_layers=('agent', 'occluder'),
-    #     control_velocity=True,
-    #     momentum=0.5,  # Value irrelevant, since maze_physics has constant speed
-    # )
-
+ 
     action_space = Jump(
         n_timesteps=_N_TIMESTEPS,
         scaling_factor=1,
@@ -190,19 +175,11 @@ def _get_config(maze_size_fun, occluder_rad_fun, occluder_opacity_fun, y_vertex_
     # Game rules
     ############################################################################
 
-    def _unglue(s):
-        s.mass = 1.
-    def _unglue_condition(state):
-        return not np.all(state['agent'][0].velocity == 0)
-    unglue = game_rules.ConditionalRule(
-        condition=_unglue_condition,
-        rules=game_rules.ModifySprites(('prey', 'ghosts'), _unglue),
-    )
 
     vanish_on_contact = game_rules.VanishOnContact(
         vanishing_layer='prey', contacting_layer='agent')
 
-    rules = (vanish_on_contact, unglue)
+    rules = (vanish_on_contact, )
 
     ############################################################################
     # Final config
@@ -229,14 +206,14 @@ def get_config(level):
     if level == 2:
         return _get_config(
             maze_size_fun=lambda: np.random.randint(low=5, high=10),
-            occluder_rad_fun = lambda: 0.04,
+            occluder_rad_fun = lambda: 0.03,
             occluder_opacity_fun = lambda: 255,
             y_vertex_min_fun=lambda: np.random.uniform(low=0, high=0.5)
         )
     elif level == 1:
         return _get_config(
             maze_size_fun=lambda: np.random.randint(low=3, high=5),
-            occluder_rad_fun = lambda: 0.04,
+            occluder_rad_fun = lambda: 0.03,
             occluder_opacity_fun = lambda: 255,
             y_vertex_min_fun=lambda: np.random.uniform(low=0, high=0.5)
         )
@@ -277,7 +254,6 @@ class Jump(action_spaces.Grid):
                         sprite.velocity = 0
                 super().step(state, self._jump_action)
             else:
-
                 self._jump_action = 4                
                 for action_layer in self._action_layers:
                     for sprite in state[action_layer]:

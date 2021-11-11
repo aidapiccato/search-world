@@ -1,7 +1,7 @@
 import numpy as np
 import sys
 
-def symm_corr(length, n_corr, target_pos, agent_init_pos):
+def symm_corr(length, n_corr, **kwargs):
     """Generates maze of symmetric corridor type, with no informative nodes
 
     Args:
@@ -34,10 +34,8 @@ def symm_corr(length, n_corr, target_pos, agent_init_pos):
     # creating set of all possible start states for agents    
     states = np.argwhere(maze == 0)
     # finding agent and target position by indexing into states
-    target_pos = states[target_pos]
-    agent_init_pos = states[agent_init_pos]
 
-    return dict(inf_positions=inf_positions, maze=maze, target_pos=target_pos, agent_init_pos=agent_init_pos)
+    return dict(inf_positions=inf_positions, maze=maze)
 
 
 def hallway(length, target_pos, agent_init_pos):

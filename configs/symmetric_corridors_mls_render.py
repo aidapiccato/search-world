@@ -26,12 +26,8 @@ def env_config():
         'kwargs':{
             'max_steps': 100,
             'maze_gen_func': symm_corr,
-            'maze_gen_func_kwargs': {
-                'length': 5, 
-                'n_corr': 4,
-                'target_pos': 3,
-                'agent_initial_pos': 1,                 
-            }
+            'maze_gen_func_kwargs':  {'length': 3,  'n_corr': 2},
+            'init_state': {'target_state': 1, 'agent_init_state': 3}
         }
     }
     return config
@@ -44,7 +40,7 @@ def get_config():
             'model': model_config(),
             'model_kwargs': model_kwargs_config(),
             'env': env_config(),
-            'num_training_steps': 10, 
+            'num_training_steps': 100, 
             'render': True
         }    
     }
