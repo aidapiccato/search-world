@@ -26,9 +26,8 @@ def env_config():
         'kwargs':{
             'max_steps': 100,
             'maze_gen_func': symm_corr,
-            'maze_gen_func_kwargs': {
-               {'length': 5,  'n_corr': 3, 'target_pos': 4, 'agent_init_pos': 6}           
-            }
+            'maze_gen_func_kwargs':  {'length': 3,  'n_corr': 2},
+            'init_state': {'target_state': 1, 'agent_init_state': 2}        
         }
     }
     return config

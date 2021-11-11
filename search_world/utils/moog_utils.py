@@ -90,15 +90,22 @@ def get_action_sequence(trial):
     actions = np.asarray([action[0] for action in action_tups])
     return {'raw_actions': actions, 'raw_action_times': action_times}
 
+def _flatten_dict(d):
+    """Flattens any nested dictionaries in dictionary d into a single-level dictionary. Only flattens a single level"""
+    d_copy = {}
+    t = {}
+    for k, v in d.items():
+        if isinstance(v, dict):
+            for nested_k, nested_v in v.items():        
+                d_copy.update({nested_k: nested_v})
+        else:
+            d_copy.update({k: v})      
+    return d_copy
 
 def get_maze_kwargs(trial):
     state = trial[0][STATE_INDEX]
     agent = list(filter(lambda sprite: sprite[0] == 'agent', state))
-    kwargs = agent[0][1][0][14]['env']
-    if 'maze' in kwargs:
-        del kwargs['maze']
-    if 'max_steps' in kwargs:
-        del kwargs['max_steps']
+    kwargs = agent[0][1][0][14]['env'] 
     return kwargs
 
 def get_agent(trial, maze_size, y_vertex_min):
@@ -219,19 +226,21 @@ def get_trial_dataframe(trial_paths, **kwargs):
         d.update(get_maze_env(trial))        
         d.update(get_action_sequence(trial))    
 
-        d.update({'name': 'Human'}) 
+        d.update({'name': 'Human', 'horizon': None, 'lambda': None, 'model': None}) 
         d.update(get_agent(trial, maze_size=d['maze_size'], y_vertex_min=d['y_vertex_min']))
         d.update(get_states(d['maze_array'], d['agent']))
         move_indexes = d['move_steps']-1
         move_indexes = np.concatenate((move_indexes, [-1]))
         d.update({'discrete_states': d['agent_state'][move_indexes]})
-        d.update({'avtion': d['raw_actions'][d['move_steps']], 'action_times': d['raw_action_times'][d['move_steps']]})
+        d.update({'action': d['raw_actions'][d['move_steps']], 'action_times': d['raw_action_times'][d['move_steps']]})
+        d.update(_flatten_dict(d['maze_gen_func_kwargs']))
+        d.update(_flatten_dict(d['init_state']))
         env = d['env']
         vector_data = []
         step = 0
         obs, reward, done, info = env.reset()
         vector_data.append({'obs': obs, 'reward': reward, 'done': done, 'step': step, 'info': info})
-        for step, action in enumerate(d['actions']):
+        for step, action in enumerate(d['action']):
             obs, reward, done, info = env.step(action)
             vector_data.append({'obs': obs, 'reward': reward, 'done': done, 'step': step, 'info': info})
         vector_dict = {k: [dic[k] for dic in vector_data] for k in vector_data[0]}

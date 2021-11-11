@@ -59,8 +59,8 @@ def get_trials_dataframe(fns, overwrite=True):
         with open(fn_dict['scalar_fn'], 'rb') as f:
             scalar_dict = pkl.load(f)
             scalar_dict.update({'dataset_index': dataset_index})
-            scalar_dict.update(scalar_dict['env'])
-            scalar_dict.update(scalar_dict['model'])
+            scalar_dict.update(_flatten_dict(scalar_dict['env']))
+            scalar_dict.update(_flatten_dict(scalar_dict['model']))
             scalar_dicts.append(scalar_dict)
 
         
@@ -147,8 +147,7 @@ def get_consistency(condition_df, trials_df, condition,):
     
     names = condition_df.index.unique(level=-1)
     names = names[names != 'OptimalAgent']
-    consistency_df = np.zeros((len(names), len(names)))
-    print(names)
+    consistency_df = np.zeros((len(names), len(names))) 
     for idx_1, agent_1 in enumerate(names):
         for idx_2, agent_2 in enumerate(names): 
             if agent_1 == agent_2: 

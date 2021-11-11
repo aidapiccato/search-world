@@ -4,6 +4,7 @@ pomdp/*
 .DS_Store
 *pomdp-solve-*
 old_logs/*
+human_logs/*
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
