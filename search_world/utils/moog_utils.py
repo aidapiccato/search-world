@@ -119,7 +119,7 @@ def get_agent(trial, maze_size, y_vertex_min):
     agent = [list(filter(lambda sprite: sprite[0] == 'agent', step)) for step in state]
     on_grid = list(map(lambda sprite: _get_on_grid(sprite[0][1][0][:2], maze_size, y_vertex_min), agent))
     agent = np.asarray(list(map(lambda sprite: _get_inds(sprite[0][1][0][:2], maze_size, y_vertex_min), agent)))
-    # steps at which you move off of a node
+
     move_steps = np.asarray(np.where(np.diff(on_grid))[0])
     move_steps = move_steps[::2]+1
     move_steps = move_steps.astype(int)
@@ -144,9 +144,8 @@ def _get_on_grid(position, maze_size, y_vertex_min):
     offset = np.asarray([_X_VERTEX_MIN, y_vertex_min])
     position = position - offset
 
-    # grid_side = _DISPLAY_SIZE / maze_size
-    # half_grid_side = 0.5 * _DISPLAY_SIZE / maze_size
-    grid_side = _DISPLAY_SIZE / 10
+    grid_side = _DISPLAY_SIZE / maze_size
+    half_grid_side = 0.5 * _DISPLAY_SIZE / maze_size
     half_grid_side = 0.5 * grid_side
 
     if round:
@@ -165,9 +164,8 @@ def _get_inds(position, maze_size, y_vertex_min, round=True):
     offset = np.asarray([_X_VERTEX_MIN, y_vertex_min])
     position = position - offset
 
-    # grid_side = _DISPLAY_SIZE / maze_size
-    # half_grid_side = 0.5 * _DISPLAY_SIZE / maze_size
-    grid_side = _DISPLAY_SIZE / 10
+    grid_side = _DISPLAY_SIZE / maze_size
+    half_grid_side = 0.5 * _DISPLAY_SIZE / maze_size
     half_grid_side = 0.5 * grid_side
 
     if round:
@@ -229,8 +227,13 @@ def get_trial_dataframe(trial_paths, **kwargs):
         trial = json.load(open(p, 'r')) 
         d = {}
         d.update(get_time(trial))
+<<<<<<< HEAD
         d.update(get_maze(trial))
         d.update(get_maze_kwargs(trial))        
+=======
+        d.update(get_maze(trial)) 
+        d.update(get_maze_kwargs(trial))
+>>>>>>> cb2038876aa680f236d42a1872acb870f9a742e7
         d.update(get_maze_env(trial))        
         d.update(get_action_sequence(trial))    
         d.update({'name': 'Human', 'horizon': None, 'lambda': None, 'model': None}) 
