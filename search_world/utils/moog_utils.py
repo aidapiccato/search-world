@@ -21,21 +21,27 @@ _DISPLAY_SIZE = 0.5
 _EPSILON = 1e-45
 _EPSILON = 1e-4
 
-def moog_generator(ambient_padding):
+def moog_generator():
+    # length = np.random.choice([3, 5, 7, 9])
+    # n_corr = np.random.choice([2, 3, 4, 5])
+    n_corr = np.random.choice([2, 3, 4])
     length = np.random.choice([3, 5, 7, 9])
-    n_corr = np.random.choice([2, 3, 4, 5])
     agent_init_pos = np.random.choice(list(range(0, n_corr * length + n_corr - 1, 3)))
     target_pos = np.random.choice(list(range(0, n_corr * length + n_corr - 1, 3)))    
     while target_pos == agent_init_pos:
         target_pos = np.random.choice(list(range(0, n_corr * length + n_corr - 1, 3)))    
     maze = Maze(max_steps=100, maze_gen_func=symm_corr, maze_gen_func_kwargs={'length': length,  'n_corr': n_corr}, init_state={'target_state': target_pos, 'agent_init_state': agent_init_pos})
+
     maze_obj = maze    
     maze.reset()
 
     maze = maze._maze
     size_0 = maze.shape[0] 
     size_1 = maze.shape[1]
+    # ambient_size = np.asarray([15, 15])
+    ambient_padding = 5 
     ambient_size = ambient_padding + np.amax(maze.shape)
+    ambient_size = np.int64(15)
 
     agent_init_pos = maze_obj._state_space[maze_obj._agent_init_state]
     prey_pos = maze_obj._state_space[maze_obj._target_state]
@@ -138,9 +144,10 @@ def _get_on_grid(position, maze_size, y_vertex_min):
     offset = np.asarray([_X_VERTEX_MIN, y_vertex_min])
     position = position - offset
 
-    grid_side = _DISPLAY_SIZE / maze_size
-    half_grid_side = 0.5 * _DISPLAY_SIZE / maze_size
-
+    # grid_side = _DISPLAY_SIZE / maze_size
+    # half_grid_side = 0.5 * _DISPLAY_SIZE / maze_size
+    grid_side = _DISPLAY_SIZE / 10
+    half_grid_side = 0.5 * grid_side
 
     if round:
         nearest_inds = (np.round(position  / grid_side - 0.5)).astype(int)
@@ -158,9 +165,10 @@ def _get_inds(position, maze_size, y_vertex_min, round=True):
     offset = np.asarray([_X_VERTEX_MIN, y_vertex_min])
     position = position - offset
 
-    grid_side = _DISPLAY_SIZE / maze_size
-    half_grid_side = 0.5 * _DISPLAY_SIZE / maze_size
-
+    # grid_side = _DISPLAY_SIZE / maze_size
+    # half_grid_side = 0.5 * _DISPLAY_SIZE / maze_size
+    grid_side = _DISPLAY_SIZE / 10
+    half_grid_side = 0.5 * grid_side
 
     if round:
         nearest_inds = (np.round(position  / grid_side - 0.5)).astype(int)

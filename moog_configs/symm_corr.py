@@ -42,7 +42,7 @@ def _get_config(maze_size_fun, occluder_rad_fun, occluder_opacity_fun, y_vertex_
     prey_factors = dict(shape='circle', scale=0.02, c0=0.2, c1=1., c2=1.)
 
     # Occluder
-    occluder_factors = dict(c0=0.6, c1=0.25, c2=0.5)
+    occluder_factors = dict(c0=0, c1=0, c2=0.2)
     def state_initializer():    
         nonlocal maze_size_fun
         nonlocal occluder_opacity_fun
@@ -54,8 +54,8 @@ def _get_config(maze_size_fun, occluder_rad_fun, occluder_opacity_fun, y_vertex_
         y_vertex_min = y_vertex_min_fun()
         occluder_opacity = occluder_opacity_fun() 
         # Creating base search maze         
-        ambient_padding=5
-        orig_maze_array, maze_array, maze_obj, agent_init_pos, prey_pos = moog_generator(ambient_padding=ambient_padding)
+
+        orig_maze_array, maze_array, maze_obj, agent_init_pos, prey_pos = moog_generator()
         maze_size = orig_maze_array.shape
         ambient_size = maze_array.shape
 
@@ -206,7 +206,7 @@ def get_config(level):
     if level == 2:
         return _get_config(
             maze_size_fun=lambda: np.random.randint(low=5, high=10),
-            occluder_rad_fun = lambda: 0.03,
+            occluder_rad_fun = lambda: 0.025,
             occluder_opacity_fun = lambda: 255,
             y_vertex_min_fun=lambda: np.random.uniform(low=0, high=0.5)
         )
@@ -220,7 +220,7 @@ def get_config(level):
     elif level == 0:
         return _get_config(
             maze_size_fun=lambda: np.random.randint(low=4, high=10),
-            occluder_rad_fun = lambda: np.random.uniform(low=0.03, high=0.06),
+             occluder_rad_fun = lambda: 0.02,
             occluder_opacity_fun = lambda: 0,
             y_vertex_min_fun=lambda: np.random.uniform(low=0, high=0.5)
         )

@@ -154,7 +154,6 @@ class OptimalAgent(object):
         self._lambda = discount_factor
         self._belief_state = BeliefState(self._env)
 
-    
     def reset(self):
         self._belief_state.reset()
         self._solver_input = self._env._generate_solver_input()
