@@ -6,8 +6,8 @@ import os
 import subprocess
 import glob
 
-# PATH_TO_POMDP_SOLVER = '/Users/aidapiccato/pomdp-solve-5.4/src/pomdp-solve'
-PATH_TO_POMDP_SOLVER = '/om/user/apiccato/lib/pomdp-solve-5.4/src/pomdp-solve'
+PATH_TO_POMDP_SOLVER = '/Users/aidapiccato/pomdp-solve-5.4/src/pomdp-solve'
+# PATH_TO_POMDP_SOLVER = '/om/user/apiccato/lib/pomdp-solve-5.4/src/pomdp-solve'
 def run(solver_input, name ):
     """Reads in alpha vectors and finite state controller for POMDP specified in solver-input
 
@@ -29,8 +29,7 @@ def run(solver_input, name ):
             os.mkdir(temp_directory)
         with open(input_file_path, 'w') as f:
             f.write(solver_input)
-            f.close() 
-        # import pdb; pdb.set_trace()
+            f.close()  
         # run program in temporary directory
         command = "{} -pomdp {} -o {}".format(PATH_TO_POMDP_SOLVER, input_file_path, output_file_path)
         print(command.split(" "))

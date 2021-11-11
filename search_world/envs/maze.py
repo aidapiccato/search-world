@@ -1,9 +1,7 @@
 import io
 import search_world
 import numpy as np
-import matplotlib.pyplot as plt
-from search_world.utils.maze_utils import find_shortest_path, find_longest_path
-from search_world.utils.pomdp_utils import run
+import matplotlib.pyplot as plt 
 
 class MazeStateSpace(object):
     def __init__(self, maze) -> None:
@@ -110,11 +108,13 @@ class MazeTransitionModel(object):
         self._transition_func_prob = transition_func_prob
         self._transition_func = transition_func
         self._histogram = {state: {action: {next_state: self._transition_func_prob(self._state_space[state], self._action_space[action], self._state_space[next_state]) for next_state in self._state_space} for action in self._action_space} for state in self._state_space}
+        
          
     def __call__(self, state, action):
         if action is None:
             return self._state_space(self._transition_func(self._state_space[state], None))
-        return self._state_space(self._transition_func(self._state_space[state], self._action_space[action]))
+        ns = self._state_space(self._transition_func(self._state_space[state], self._action_space[action])) 
+        return ns
         
     def prob(self, next_state, state, action):
         if action is None:
@@ -137,11 +137,13 @@ class MazeActionSpace(search_world.Space):
     """A grid world action space with 4 movements
     """
     def __init__(self):
-        self._actions = [[0, 1], [1, 0], [0, -1], [-1, 0], [0, 0]]
+        self._actions = [[0, -1], [0, 1] , [-1, 0], [1, 0], [0, 0]]
         self._action_map = {str(action_val): i for (i, action_val) in enumerate(self._actions)}
         self._action_space = np.arange(len(self._actions))
+
     def __len__(self):
         return len(self._action_space)
+
     def sample(self):
         return np.random.choice(self._action_space)
     
@@ -160,13 +162,14 @@ class MazeActionSpace(search_world.Space):
         return a in self._action_space
 
 class Maze(search_world.Env):
-    def __init__(self, maze_gen_func, maze_gen_func_kwargs, max_steps) -> None:
+    def __init__(self, maze_gen_func, maze_gen_func_kwargs, max_steps, init_state) -> None:
         """Constructor for maze class
 
         Args:
             _maze_gen_func (func): Function to generate mazes
         """
         super().__init__() 
+        self._init_state = init_state
         self._max_steps = max_steps
         self._maze_gen_func = maze_gen_func
         self._maze_gen_func_kwargs = maze_gen_func_kwargs
@@ -205,9 +208,8 @@ class Maze(search_world.Env):
         return '{}{}'.format(self._maze_gen_func.__name__, id_vals)
 
     def info(self):
-        info =  self._maze_gen_func_kwargs
-        info.update({'agent_initial_state': self._agent_initial_state, 
-            'target_state': self._target_state, 'maze': self._maze})
+        info = {'maze_gen_func_kwargs': self._maze_gen_func_kwargs}
+        info.update({'init_state': self._init_state})
         return info
     
     def step(self, action):
@@ -222,7 +224,6 @@ class Maze(search_world.Env):
             done (bool): True if agent has found target or environment times out, False otherwise.
             info (dict): auxiliary information
         """ 
-
         self._take_action(action)
 
         done = False
@@ -243,16 +244,15 @@ class Maze(search_world.Env):
         return obs, reward, done, info
 
 
-
     def _take_action(self, action):
         """Updates agent state. 
 
         Args:
             action (object): action performed by agent.
         """
-        # import pdb; pdb.set_trace()
         if action is None or action in self._action_space:
             self._agent_state = self._transition_model(state=self._agent_state, action=action)
+
         else:
             raise ValueError("Agent action not in Maze environment action space")
 
@@ -264,11 +264,7 @@ class Maze(search_world.Env):
         output.write('states: {}\n'.format(len(self._state_space)))
         output.write('actions: {}\n'.format(len(self._action_space)))
         output.write('observations: {}\n'.format(len(self._observation_space)))
-<<<<<<< HEAD
-        start_state = [str(1/len(self._state_space)) for _ in self._state_space] # uniform starting belief state
-=======
         start_state = [str(1/len(self._state_space))] * len(self._state_space)
->>>>>>> d043797c139ebe39b7f6934d9d904159501289e0
         start_state = " ".join(start_state)
         output.write('start: {}\n'.format(start_state))
         output.write(self._observation_model.generate_solver_input())
@@ -282,14 +278,10 @@ class Maze(search_world.Env):
         target_position = self._state_space[self._target_state]
         if ax is None:
             ax = plt.gca()
-        ax.imshow(self._maze, cmap='gray')
+        ax.imshow(self._maze, cmap='gray', origin='lower')
         target = plt.Circle((target_position[1], target_position[0]), radius=0.5, color='yellow')
         ax.add_artist(target)
         agent = plt.Circle((agent_position[1], agent_position[0]), radius=0.5)        
-        # TODO: Add rendering capacity for informative items
-        # for inf_pos in self._inf_positions:
-        #     inf = plt.Circle((inf_pos[1], inf_pos[0]), radius=0.5, color='red')
-        #     ax.add_artist(inf)
         ax.add_artist(agent)
         ax.set_title('obs = {}, reward={}'.format(self._agent_observation(), self.agent_reward()))
         
@@ -300,12 +292,14 @@ class Maze(search_world.Env):
         """
         # creating maze and setting initial conditions
         maze = self._maze_gen_func(**self._maze_gen_func_kwargs)
-        self._maze = maze['maze']
-        self._target_position = maze['target_pos']        
+        self._maze = maze['maze'] 
         self._inf_positions = maze['inf_positions']
-        self._agent_init_pos = maze['agent_init_pos']
+        self._state_space = MazeStateSpace(self._maze)
+        self._target_state = self._init_state['target_state']
+        self._agent_init_state = self._init_state['agent_init_state']
+        self._target_position = self._state_space[self._target_state]        
+        self._agent_state = self._agent_init_state
 
-        
         def _observation_func(coor) -> object:
             # TODO: Add possibility of informative observations
             """Generates observation for given coordinate position. Useful for constructing entire observation space
@@ -319,8 +313,6 @@ class Maze(search_world.Env):
             is_target = np.all(coor == self._target_position)
             return adjacent_nodes + (is_target, )
 
-       
-
         def _observation_func_prob(coor, obs):
             true_obs = _observation_func(coor)
             return true_obs == obs
@@ -331,16 +323,18 @@ class Maze(search_world.Env):
             Args:
                 position (object): coordinates of object whose position is being checked
             """
-            if (0 <= coor).all() and (coor < self._maze.shape).all():
+            if (0 <= coor).all() and (coor < self._maze.shape).all(): 
                 return self._maze[coor[0], coor[1]] != 1
             return False
 
-        def _transition_func(coor, action):             
+        def _transition_func(coor, action): 
+
             if action is None:
                 return coor
-            new_coor = coor + action
+            new_coor = coor + action 
             if _is_valid(new_coor):
-                return new_coor
+
+                return new_coor 
             return coor
 
         def _transition_func_prob(coor, action, new_coor):
@@ -351,19 +345,13 @@ class Maze(search_world.Env):
             return np.all(coor == self._target_position) * 10 + (1 - np.all(coor == self._target_position)) * -3
 
         # creating state and observation spaces
-        self._state_space = MazeStateSpace(self._maze)
+       
         self._observation_space = MazeObservationSpace(state_space=self._state_space, observation_func=_observation_func) # [self._observation(state) for state in self._state_space]       
         self._action_space = MazeActionSpace()        
         self._observation_model = MazeObservationModel(state_space=self._state_space, observation_space=self._observation_space, observation_func_prob=_observation_func_prob, observation_func=_observation_func)
         self._transition_model = MazeTransitionModel(state_space=self._state_space, action_space=self._action_space, transition_func_prob=_transition_func_prob, transition_func=_transition_func)
-
-        self._target_state = self._state_space(self._target_position)
-        self._agent_initial_state = self._state_space(self._agent_init_pos)
-        self._agent_state = self._agent_initial_state
-
-        self._reward_model = MazeRewardModel(state_space=self._state_space, reward_func=_reward_func)
-        self._min_dist = find_shortest_path(self._maze, self._target_position, self._agent_init_pos)
-        self._max_dist = find_longest_path(self._maze, self._target_position, self._agent_init_pos)
+        self._reward_model = MazeRewardModel(state_space=self._state_space, reward_func=_reward_func) 
         self._num_steps = 0
+
 
         return self.step(None)

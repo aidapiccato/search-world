@@ -44,7 +44,8 @@ class Trainer(object):
         if done: 
             # if done is true on the first timestep, don't run!
             return
-
+        logging.info('Step: {} of {}'.format(step, self._num_training_steps))
+        logging.info('action={}, obs={}, reward={}, done={}, info={}'.format(action, obs, reward, done, info))            
         vector_data.append({'obs': obs, 'reward': reward, 'action': action, 'done': done, 'step': step, 'info': info})
         for step in range(self._num_training_steps):
             # import pdb; pdb.set_trace()
