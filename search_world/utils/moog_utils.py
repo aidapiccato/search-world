@@ -227,13 +227,8 @@ def get_trial_dataframe(trial_paths, **kwargs):
         trial = json.load(open(p, 'r')) 
         d = {}
         d.update(get_time(trial))
-<<<<<<< HEAD
-        d.update(get_maze(trial))
-        d.update(get_maze_kwargs(trial))        
-=======
         d.update(get_maze(trial)) 
         d.update(get_maze_kwargs(trial))
->>>>>>> cb2038876aa680f236d42a1872acb870f9a742e7
         d.update(get_maze_env(trial))        
         d.update(get_action_sequence(trial))    
         d.update({'name': 'Human', 'horizon': None, 'lambda': None, 'model': None}) 
