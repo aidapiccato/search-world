@@ -37,11 +37,8 @@ def moog_generator():
 
     maze = maze._maze
     size_0 = maze.shape[0] 
-    size_1 = maze.shape[1]
-    # ambient_size = np.asarray([15, 15])
-    ambient_padding = 5 
-    ambient_size = ambient_padding + np.amax(maze.shape)
-    ambient_size = np.int64(15)
+    size_1 = maze.shape[1] 
+    ambient_size = np.int64(13)
 
     agent_init_pos = maze_obj._state_space[maze_obj._agent_init_state]
     prey_pos = maze_obj._state_space[maze_obj._target_state]
@@ -240,6 +237,7 @@ def get_trial_dataframe(trial_paths, **kwargs):
         d.update({'action': d['raw_actions'][d['move_steps']], 'action_times': d['raw_action_times'][d['move_steps']]})
         d.update(_flatten_dict(d['maze_gen_func_kwargs']))
         d.update(_flatten_dict(d['init_state']))
+
         env = d['env']
         vector_data = []
         step = 0

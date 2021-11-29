@@ -60,8 +60,9 @@ def _get_config(maze_size_fun, occluder_rad_fun, occluder_opacity_fun, y_vertex_
         ambient_size = maze_array.shape
 
 
-        translation_x = np.random.randint(low=1, high=ambient_size[0]-(maze_size[0] + 1)-1)
-        translation_y = np.random.randint(low=1, high=ambient_size[1]-(maze_size[1] + 1)-1) 
+        translation_x = np.random.randint(low=0, high=ambient_size[0]-(maze_size[0]-1)-2)
+        translation_y = np.random.randint(low=0, high=ambient_size[1]-(maze_size[1]-1)-2) 
+        print(maze_size, ambient_size, translation_x, translation_y)
 
         # Translating maze to produce search maze        
         search_maze_array = np.roll(maze_array, shift=translation_x, axis=0)
@@ -206,7 +207,7 @@ def get_config(level):
     if level == 2:
         return _get_config(
             maze_size_fun=lambda: np.random.randint(low=5, high=10),
-            occluder_rad_fun = lambda: 0.025,
+            occluder_rad_fun = lambda: 0.0273,
             occluder_opacity_fun = lambda: 255,
             y_vertex_min_fun=lambda: np.random.uniform(low=0, high=0.5)
         )
