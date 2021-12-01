@@ -4,11 +4,16 @@ import numpy as np
 import pickle as pkl
 import pandas as pd
 from scipy.stats import wasserstein_distance
+from search_world.utils.maze_utils import symm_corr
+from search_world.envs.maze import Maze
 
 def get_trials_features(df):
     """Given a dataframe of trials, returns updated trials with new features extracted from raw data. TASK SPECIFIC"""
     df = df.copy()
-    df['agent_dist'] = df.apply(lambda x: len(x.action) - 1, axis=1)
+    df['agent_dist'] = df.apply(lambda x: len(x.action), axis=1)
+    df['discrete_agent_states'] = df.apply(lambda x: [d['agent_state'] for d in x.info], axis=1)
+    # df['env'] = df.apply(lambda x: Maze(maze_gen_func=symm_corr, max_steps=100, **x.env), axis=1)
+    # df.apply(lambda x: x.env.reset(), axis=1)
     return df
 
 
@@ -34,7 +39,7 @@ def get_dataset_paths(job_ids='', base_dir='../logs'):
 
 def _flatten_dict(d):
     """Flattens any nested dictionaries in dictionary d into a single-level dictionary. Only flattens a single level"""
-    d_copy = {}
+    d_copy = {}             
     t = {}
     for k, v in d.items():
         if isinstance(v, dict):
@@ -89,7 +94,7 @@ def get_trials_dataframe(fns, overwrite=True):
             # remove trials that never ended
             df['done'] = df.done.apply(lambda x: [x] if isinstance(x, bool) else x)
             df = df[df.apply(lambda x: True in x.done, axis=1)].reset_index(drop=True)
-
+            df['action']  = df.apply(lambda x: x.action[1:], axis=1)
             with open(os.path.join(fn_dict['data_fn'], 'dataframe'), 'wb') as f:
                 pkl.dump(df, f)
 
@@ -100,6 +105,7 @@ def get_trials_dataframe(fns, overwrite=True):
     df = pd.concat(vector_dfs).reset_index(drop=True)
     
     df = df.merge(scalar_df, on='dataset_index')
+    
     
     return df     
     
@@ -126,6 +132,7 @@ def get_condition_features(condition_df, trials_df):
 
     condition_df['agent_dist_hist'] = condition_df.apply(lambda r: list(np.histogram(r.agent_dist, bins=bins, density=True)[0]), axis=1).to_frame()
     condition_df['error'] = condition_df.apply(lambda g: _get_error(condition_df, g), axis=1)
+    condition_df['n_trials'] = condition_df.apply(lambda g: len(g.agent_dist), axis=1)
     return condition_df
 
 def get_condition_df(trials_df, condition):

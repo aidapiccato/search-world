@@ -16,9 +16,9 @@ _CONFIG_NAME = 'configs.symm_corr_qmdp'
 def _get_param_sweep():
     """Return the sweep we want to launch."""
     # n_corridors = [2, 3, 4, 5]
-    # lengths = [3, 5, 7, 9] 
 
-    n_corridors = [4]
+
+    n_corridors = [3]
     lengths = [7] 
 
 

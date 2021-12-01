@@ -21,9 +21,7 @@ _DISPLAY_SIZE = 0.5
 _EPSILON = 1e-45
 _EPSILON = 1e-4
 
-def moog_generator():
-    # length = np.random.choice([3, 5, 7, 9])
-    # n_corr = np.random.choice([2, 3, 4, 5])
+def moog_generator():    
     n_corr = np.random.choice([2, 3, 4])
     length = np.random.choice([3, 5, 7, 9])
     agent_init_pos = np.random.choice(list(range(0, n_corr * length + n_corr - 1, 3)))
@@ -65,7 +63,10 @@ def get_states(maze_array, agent):
     states = []
     states_coors = np.vstack(np.where(np.flip(maze_array) == 0)).T
     for pos in agent:
-        states.append(np.where(np.all(states_coors == np.asarray(pos), axis=1))[0][0])
+        if len(np.where(np.all(states_coors == np.asarray(pos), axis=1))[0]) == 0:
+            states.append(None)
+        else:
+            states.append(np.where(np.all(states_coors == np.asarray(pos), axis=1))[0][0])
     states = np.asarray(states)
     return {'agent_state': states}
 
@@ -234,12 +235,23 @@ def get_trial_dataframe(trial_paths, **kwargs):
         d.update({'name': 'Human', 'horizon': None, 'lambda': None, 'model': None}) 
         d.update(get_agent(trial, maze_size=d['maze_size'], y_vertex_min=d['y_vertex_min']))
         d.update(get_states(d['maze_array'], d['agent']))
+        d.update(_flatten_dict(d['init_state']))
         move_indexes = d['move_steps']-1
         move_indexes = np.concatenate((move_indexes, [-1]))
-        d.update({'discrete_states': d['agent_state'][move_indexes]})
-        d.update({'action': d['raw_actions'][d['move_steps']], 'action_times': d['raw_action_times'][d['move_steps']]})
+        discrete_states = d['agent_state'][np.concatenate((d['move_steps']-1, [-1]))]
+
+        action = d['raw_actions'][d['move_steps']]
+        # target_reached = np.where(discrete_states == d['target_state'])[0]
+        # if len(target_reached) == 0: 
+        #     target_reached = -2
+        # else:
+        #     target_reached = target_reached[0]        
+        # d.update({'discrete_states': discrete_states[:target_reached+1]})
+        # action =  d['raw_actions'][d['move_steps']][:target_reached+1]
+        d.update({'discrete_states': discrete_states})
+        d.update({'action': action, 'action_times': d['raw_action_times'][d['move_steps']]})
         d.update(_flatten_dict(d['maze_gen_func_kwargs']))
-        d.update(_flatten_dict(d['init_state']))
+
         env = d['env']
         vector_data = []
         step = 0
